@@ -1,0 +1,271 @@
+.edit-icon {
+    width: 15px;
+}
+
+#cross-icon,
+#cross-exp,
+#cross-education {
+    width: 15px;
+    margin-left: auto;
+}
+
+#end-search,
+#cross-view-project {
+    width: 15px;
+    padding: 1em;
+}
+
+#cross-view-project {
+    float: right;
+    margin-bottom: .5em;
+}
+
+.search-div {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin: 1em 3em;
+    margin-bottom: 3em;
+}
+
+#end-search:hover,
+#cross-view-project:hover {
+    background-color: rgb(230, 230, 230);
+    cursor: pointer;
+
+}
+
+.delete-project,
+.edit-project,
+.view-project,
+.edit-exp,
+.delete-exp,
+.edit-edu,
+.delete-edu {
+    width: 25px;
+    display: block;
+
+    margin: 1em 0;
+    padding: 1em 1em;
+}
+
+#education-section {
+    margin-top: 4em;
+}
+
+.edit-icon:hover,
+#plus-icon:hover,
+#cross-icon:hover,
+.delete-project:hover,
+.edit-project:hover,
+.view-project:hover,
+#plus-exp:hover,
+#cross-exp:hover,
+.delete-exp:hover,
+.edit-exp:hover,
+#plus-edu:hover,
+#cross-education:hover,
+.edit-edu:hover,
+.delete-edu:hover {
+    cursor: pointer;
+}
+
+.delete-project:hover,
+.delete-exp:hover,
+.delete-edu:hover {
+    background-color: rgba(255, 0, 0, 0.395);
+    border-radius: 50%;
+}
+
+.edit-project:hover,
+.view-project:hover,
+.edit-exp:hover,
+.edit-edu:hover {
+    background-color: rgb(230, 230, 230);
+    border-radius: 50%;
+}
+
+#plus-icon,
+#plus-exp,
+#plus-edu {
+    font-size: 2rem;
+    width: min-content;
+    text-align: center;
+    margin: auto;
+    padding: .1em .5em;
+}
+
+#plus-icon:hover,
+#plus-exp:hover,
+#plus-edu:hover {
+    background-color: #1d3be3a4;
+    border-radius: 50%;
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 1em;
+}
+
+.header .edit-icon {
+    margin-bottom: .7em;
+    margin-top: .2em;
+}
+
+.about-me-information {
+    position: relative;
+}
+
+.about-me-information .edit-icon {
+    margin: .5em 3em .5em 0;
+}
+
+#uniName,
+#CompanyName {
+    font-size: 15px;
+    font-style: italic;
+    font-weight: 500;
+}
+
+.edu-form,
+.exp-form {
+    z-index: 1;
+}
+
+/* ------------------------------------------------------ */
+#project {
+    position: relative;
+}
+
+.mainDiv {
+    padding: 1em 2em;
+    box-shadow: 5px 5px 10px rgb(207, 207, 207), -5px -5px 10px rgb(207, 207, 207);
+    background-color: white;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    z-index: 1;
+}
+
+.hide {
+    display: none;
+}
+
+
+.name {
+    background: linear-gradient(160deg, #1d3be3, #d2861d);
+
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+}
+
+.code-btn {
+    font-weight: 700;
+    padding: .1rem .7rem;
+    border: 2px solid white;
+}
+
+.code-btn.name:hover {
+    border-image: linear-gradient(160deg, #1d3be3, #d2861d)1;
+    border-width: 2px;
+    border-style: solid;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+#projectImage {
+    width: 100%;
+    border: 1px solid rgb(210, 210, 210);
+    text-align: center;
+}
+
+#projectHeading {
+    font-size: 1.5rem;
+    margin: .5em 0 .3em 0;
+}
+
+#projectDescription {
+
+    margin-bottom: 1em;
+}
+
+@media(min-width: 800px) {
+    .mainDiv {
+        width: 700px;
+
+    }
+}
+
+/*  */
+
+#expDuration {
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+/* --------------------------------------------------- */
+
+.search-bar {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+}
+
+#search {
+    padding: .5em 1em;
+    border-radius: 2rem;
+    border: 1px solid #5d5d5d;
+
+    min-width: 200px;
+}
+
+.main-row {
+    font-size: 20px;
+    /* text-align: center; */
+}
+
+.main-row th,
+.table-row td {
+    border: 1px solid #ddd;
+    padding: .5em 2em;
+}
+
+/* .table-row td {
+    white-space: nowrap;
+} */
+
+.main-row th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #1d50d2;
+    color: white;
+}
+
+.project-li {
+    display: flex;
+    gap: 2em;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.forSearch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.search-append {
+    display: flex;
+    flex-direction: column;
+    gap: 3em;
+}

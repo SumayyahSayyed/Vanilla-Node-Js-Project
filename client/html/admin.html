@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal</title>
+
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="#" id="usersTab" class="usersTab">Users</a></li>
+            <li><a href="#" id="projectsTab" class="projectsTab">Projects</a></li>
+            <li class="search-bar">
+                <input type="text" name="search" id="search">
+                <img src="../assets/editable-icon/cross.png" id="cross-search" alt="">
+            </li>
+        </ul>
+    </nav>
+    <main>
+        <div id="usersDiv">
+            <table id="searchContainer" class="none searchTable">
+
+            </table>
+            <h2 id="users-main-heading">Users</h2>
+            <table id="usersTable" class="usersTable">
+            </table>
+
+            <button class="btn name addNewUser" id="addNewUser">
+                <a href="../index.html">Add New User</a>
+            </button>
+
+
+
+            <form id="register-form" class="register-form hide">
+                <div class="row-1">
+                    <div class="input-group">
+                        <label class="label" for="firstname">First name</label>
+                        <input type="text" name="firstname" id="firstname">
+                    </div>
+                    <div class="input-group">
+                        <label class="label" for="lastname">Last name</label>
+                        <input type="text" name="lastname" id="lastname">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="label" for="email">Email</label>
+                    <input type="email" name="email" id="email">
+                </div>
+                <div class="input-group">
+                    <label class="label" for="password">Password</label>
+                    <input type="password" name="password" id="password">
+                </div>
+                <div class="main-buttons">
+                    <button id="submit-button" class="btn">Update</button>
+                    <button id="cancel-button" class="btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="hide" id="projectsDiv">
+
+            <h2 id="users-main-heading">Projects</h2>
+            <table id="searchContainerProjects" class="none searchTable">
+
+            </table>
+            <table id="projectsTable" class="projectsTable">
+            </table>
+
+            <div id="mainDiv" class="mainDiv hide">
+                <img src="../assets/editable-icon/cross.png" alt="" id="cross-view-project">
+                <img id="projectImage" src="" alt="project image">
+                <div>
+                    <h3 id="projectHeading"></h3>
+                    <p id="projectDescription"></p>
+
+                    <button class="btn name">
+                        <a href="" target="_blank" id="seeLive">See Live</a>
+                    </button>
+                    <button class="code-btn name">
+                        <a href="" target="_blank" id="repoLink">Source Code</a>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <script src="../js/admin.js"></script>
+</body>
+
+</html>

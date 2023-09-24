@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Social Links</title>
+    <link href="../css/social.css" rel="stylesheet">
+</head>
+
+<body>
+    <section class="main-wrapper">
+        <h2 class="title">Social Links</h2>
+        <form id="social-form" class="social-form" onsubmit="validateForm()">
+
+            <div class="input-group">
+                <label class="label" for="github">Github</label>
+                <input type="text" name="github" id="github" onfocus="removeErrorMessage()">
+            </div>
+            <div class="input-group">
+                <label class="label" for="linkedin">LinkedIn</label>
+                <input type="text" name="linkedin" id="linkedin" onfocus="removeErrorMessage()">
+            </div>
+            <div class="input-group">
+                <label class="label" for="twitter">Twitter</label>
+                <input type="text" name="twitter" id="twitter" onfocus="removeErrorMessage()">
+            </div>
+
+            <button id="submit-button" class="btn">Add</button>
+        </form>
+    </section>
+    <script src="../js/social.js"></script>
+
+</body>
+
+</html>

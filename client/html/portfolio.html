@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="portfolio website to showcase the projects and development skills">
+    <meta name="keywords" content="Portfolio, website, Personal website">
+    <meta name="author" content="Sumayyah Sayyed">
+
+    <title>Portfolio</title>
+
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/index-2.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="" id="logout">Logout</a>
+    </nav>
+    <section class="header">
+        <h1>
+            Hi, My name is <span class="name" id="userName">Your Name</span>
+            <br>
+            I'm the <span class="editable-element" id="developerPosition">Full-Stack Developer</span>
+            <img class="edit-icon" id="editPositionIcon" src="../assets/editable-icon/edit.png" alt="">
+            .
+        </h1>
+        <button class="btn name">
+            <a href="#about-me">Know More</a>
+        </button>
+    </section>
+    <main>
+
+        <section class="about-me" id="about-me">
+            <h2>About Me</h2>
+
+            <div class="about-me-information">
+                <img src="../assets/images/about-me.avif" alt="about me">
+                <div>
+                    <p class="editable-element" id="aboutMeEditable">As Front-End Developer, I possess an impressive
+                        arsenal of skills in HTML,
+                        CSS,
+                        JavaScript, and Bootstrap. I excel in designing and maintaining responsive websites that offer a
+                        smooth user experience. My expertise lies in crafting dynamic, engaging interfaces through
+                        writing clean and optimized code.
+                    </p>
+                    <img class="edit-icon" src="../assets/editable-icon/edit-white.png" alt="">
+                    <button class="btn blue-section-btn">View Resume</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="forSearch" id="forSearch">
+            <div class="search-div">
+                <input type="text" placeholder="Search..." id="search-items">
+                <img src="../assets/editable-icon/cross.png" alt="" id="end-search">
+            </div>
+
+            <div class="search-append">
+                <table class="appendSearch hide" id="selectedElementExp">
+                </table>
+                <table class="appendSearch hide" id="selectedElementProject">
+                </table>
+            </div>
+        </section>
+
+
+        <section class="project" id="project">
+            <h2>Projects</h2>
+
+            <p id="plus-icon">+</p>
+            <div id="project-main-div" class="project-no ">
+                <form id="project-form" class="project-form hide">
+                    <div class="project-setting">
+                        <h3>Project Settings</h3>
+                        <img id="cross-icon" src="../assets/editable-icon/cross.png" alt="">
+                    </div>
+                    <div class="input-fields">
+                        <div>
+                            <label class="fieldLabel" for="projectName">Project Name</label>
+                            <input type="text" name="projectName" id="projectName" onfocus="removeErrorMessage()">
+                        </div>
+                        <div>
+                            <label class="fieldLabel" for="projectDescription">Project Description</label>
+                            <textarea name="projectDescription" id="projectDescription" cols="30" rows="5"
+                                onfocus="removeErrorMessage()"></textarea>
+                        </div>
+                        <div>
+                            <label class="fieldLabel" for="tags">Language Tags</label>
+                            <input type="text" name="tags" id="tags" onfocus="removeErrorMessage()">
+                        </div>
+                        <div>
+                            <label class="fieldLabel" for="linkToLiveWebsite">Live Website URL</label>
+                            <input type="text" name="linkToLiveWebsite" id="linkToLiveWebsite"
+                                onfocus="removeErrorMessage()">
+                        </div>
+                        <div>
+                            <label class="fieldLabel" for="linkToRepo">Github Repository Link</label>
+                            <input type="text" name="linkToRepo" id="linkToRepo" onfocus="removeErrorMessage()">
+                        </div>
+                        <div class="ending-div">
+                            <div>
+                                <label class="fieldLabel" for="projectImage">Project Image</label>
+                                <input type="file" id="file" name="file" accept="image/*" onchange='openFile(event)'
+                                    onfocus="removeErrorMessage()" />
+                            </div>
+                            <button id="addProject" class="btn name addProjectBtn">Add</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="mainDiv hide" id="popUp">
+                <img src="../assets/editable-icon/cross.png" alt="" id="cross-view-project">
+                <img id="projectImage" src="" alt="project image">
+                <div>
+                    <h3 id="projectHeading"></h3>
+                    <p id="projectInfo"></p>
+                </div>
+                <div class="tagsDiv">
+
+                </div>
+            </div>
+
+            <div id="allProjects" class="grid-projects">
+
+            </div>
+        </section>
+
+        <section class="exp" id="exp">
+            <h2>Experience</h2>
+            <p id="plus-exp">+</p>
+
+            <div id="exp-main-div">
+
+            </div>
+
+
+            <form id="exp-form" class="exp-form hide">
+                <div class="experience-setting">
+                    <h3>Experience Settings</h3>
+                    <img id="cross-exp" src="../assets/editable-icon/cross.png" alt="">
+                </div>
+                <div class="input-fields">
+                    <div>
+                        <label class="fieldLabel" for="experiencePos">Experience Position</label>
+                        <input type="text" name="experiencePos" id="experiencePos" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="company">Company Name</label>
+                        <input type="text" name="company" id="company" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="duration">Duration</label>
+                        <input type="text" name="duration" id="duration" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="jobInfo">Job Description</label>
+                        <textarea name="jobInfo" id="jobInfo" cols="30" rows="5"
+                            onfocus="removeErrorMessage()"></textarea>
+                    </div>
+                    <button id="addExp" class="btn name addProjectBtn">Add</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="education-section">
+            <h2>Education</h2>
+            <p id="plus-edu">+</p>
+
+            <div id="edu-main-div">
+
+            </div>
+
+
+            <form id="edu-form" class="edu-form hide">
+                <div class="education-setting">
+                    <h3>Education Settings</h3>
+                    <img src="../assets/editable-icon/cross.png" alt="" id="cross-education">
+                </div>
+                <div class="input-fields">
+                    <div>
+                        <label class="fieldLabel" for="degree">Degree</label>
+                        <input type="text" name="degree" id="degree" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="university">University</label>
+                        <input type="text" name="university" id="university" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="cgpa">CGPA</label>
+                        <input type="number" name="cgpa" id="cgpa" min="0" step=".001" onfocus="removeErrorMessage()">
+                    </div>
+                    <div>
+                        <label class="fieldLabel" for="uniDuration">Duration in years</label>
+                        <input type="text" name="uniDuration" id="uniDuration" onfocus="removeErrorMessage()">
+                    </div>
+                    <button id="addEdu" class="btn name addProjectBtn">Add</button>
+                </div>
+            </form>
+
+        </section>
+
+        <section class="contact">
+            <h2>Contact</h2>
+            <a href="mailto:sumayyahsayyed26@gmail.com" id="gmail" target="_blank">
+                sumayyahsayyed26@gmail.com
+            </a>
+            <button class="btn blue-section-btn">
+                <a href="//api.whatsapp.com/send?phone=923244838069" id="phoneNo" target="_blank"> Call to Action</a>
+            </button>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <img src="../assets/images/expand_less.png" alt="expand-less-icon">
+
+        <div class="social-links">
+            <a href="" id="twitter-acc" target="_blank">
+                <img src="../assets/images/twitter.png" alt="Twitter">
+            </a>
+            <a href="" id="github-acc" target="_blank">
+                <img src="../assets/images/Github.png" alt="Github">
+            </a>
+            <a href="" id="linkedin-acc" target="_blank">
+                <img src="../assets/images/linkedIn.png" alt="LinkedIn">
+            </a>
+        </div>
+        <hr>
+
+        <p class="footer-label">&copy 2023 - Template developed by <span id="template-user-name">Sumayyah Sayyed</span>
+        </p>
+
+        <div class="footer-button">
+            <div class="btn-group">
+                <button class="github-btn">
+                    <img src="../assets/images/git-fork.svg" alt="git-fork">
+                    Fork
+                </button>
+                <button class="github-btn">5,213</button>
+            </div>
+
+            <div class="btn-group">
+                <button class="github-btn">
+                    <img src="../assets/images/star.svg" alt="star">
+                    Star
+                </button>
+                <button class="github-btn">12,528</button>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/index.js"></script>
+</body>
+
+</html>

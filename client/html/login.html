@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login</title>
+    <link href="../css/login.css" rel="stylesheet">
+</head>
+
+<body>
+    <section class="main-wrapper">
+        <h2 class="title">Log In</h2>
+        <form id="register-form" class="register-form">
+            <div class="input-group">
+                <label class="label" for="email">Email</label>
+                <input type="email" name="email" id="email" onfocus="removeErrorMessage()">
+            </div>
+            <div class="input-group">
+                <label class="label" for="password">Password</label>
+                <input type="password" name="password" id="password" onfocus="removeErrorMessage()">
+            </div>
+            <div class="end-div">
+                <a href="../index.html" class="link-to-register">Don't have an account? Sign Up</a>
+                <button id="submit-button" class="btn">Submit</button>
+            </div>
+        </form>
+
+        <script src="../js/login.js"></script>
+
+    </section>
+
+</body>
+
+</html>
