@@ -1,5 +1,5 @@
 let submit = document.getElementById("social-form");
-let token = sessionStorage.getItem("Token");
+let token = localStorage.getItem("Token");
 
 submit.addEventListener("submit", (e) => {
     e.preventDefault();

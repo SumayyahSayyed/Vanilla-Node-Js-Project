@@ -46,7 +46,11 @@
                         writing clean and optimized code.
                     </p>
                     <img class="edit-icon" src="../assets/editable-icon/edit-white.png" alt="">
-                    <button class="btn blue-section-btn">View Resume</button>
+                    <div id="resume-div" class="resume-div">
+                        <a id="resume-link" href="" target="_blank"><button class="btn blue-section-btn">
+                                View Resume</button></a>
+                        <input type="file" name="resume" id="resume" accept="application/pdf" onchange="openPdf(event)">
+                    </div>
                 </div>
             </div>
         </section>
@@ -151,8 +155,8 @@
                         <input type="text" name="company" id="company" onfocus="removeErrorMessage()">
                     </div>
                     <div>
-                        <label class="fieldLabel" for="duration">Duration</label>
-                        <input type="text" name="duration" id="duration" onfocus="removeErrorMessage()">
+                        <label class="fieldLabel" for="duration">Duration in months</label>
+                        <input type="number" name="duration" id="duration" min="0" onfocus="removeErrorMessage()">
                     </div>
                     <div>
                         <label class="fieldLabel" for="jobInfo">Job Description</label>
@@ -189,11 +193,13 @@
                     </div>
                     <div>
                         <label class="fieldLabel" for="cgpa">CGPA</label>
-                        <input type="number" name="cgpa" id="cgpa" min="0" step=".001" onfocus="removeErrorMessage()">
+                        <input type="number" name="cgpa" id="cgpa" min="0" max="4" step=".001"
+                            onfocus="removeErrorMessage()">
                     </div>
                     <div>
                         <label class="fieldLabel" for="uniDuration">Duration in years</label>
-                        <input type="text" name="uniDuration" id="uniDuration" onfocus="removeErrorMessage()">
+                        <input type="number" name="uniDuration" id="uniDuration" min="0" max="4"
+                            onfocus="removeErrorMessage()">
                     </div>
                     <button id="addEdu" class="btn name addProjectBtn">Add</button>
                 </div>
@@ -206,9 +212,11 @@
             <a href="mailto:sumayyahsayyed26@gmail.com" id="gmail" target="_blank">
                 sumayyahsayyed26@gmail.com
             </a>
+            <a href="//api.whatsapp.com/send?phone=923244838069" id="phoneNo" target="_blank"></a>
             <button class="btn blue-section-btn">
-                <a href="//api.whatsapp.com/send?phone=923244838069" id="phoneNo" target="_blank"> Call to Action</a>
+                Call to Action
             </button>
+            </a>
         </section>
     </main>
 

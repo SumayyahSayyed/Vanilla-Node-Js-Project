@@ -1,13 +1,53 @@
+let token = localStorage.getItem("Token");
+
+if (token) {
+    fetch("http://localhost:3000/checkUserType", {
+        method: "GET",
+        headers: {
+            "authorization": token
+        }
+    })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "401") {
+                alert(data.message);
+            }
+            else if (data.statusCode === "200") {
+                if (data.data === "admin123@gmail.com") {
+                    window.location.href = "../html/admin.html";
+                }
+                else if (data.data !== "admin123@gmail.com") {
+                    window.location.href = "../html/portfolio.html";
+                }
+            }
+        })
+        .catch(err => {
+            console.log(err)
+        })
+}
+
+
+function preventGoingBack() {
+    window.history.forward();
+}
+setTimeout("preventGoingBack()", 0);
+window.onunload = function () { null };
+
 let userName = document.getElementById("userName");
 let userEmail = document.getElementById("gmail");
 let phoneNo = document.getElementById("phoneNo");
 let templateUserName = document.getElementById("template-user-name");
-let getAllData = null;
+let getProjectData = null;
+let getExpData = null;
+let getEduData = null;
 /* ----------------------------------------------------------------------------------*/
 /* ------------------------------- Fetch Token --------------------------------------*/
 /* ----------------------------------------------------------------------------------*/
 
-let token = sessionStorage.getItem("Token");
+// let token = localStorage.getItem("Token"); 
+
 fetch("http://localhost:3000/profile", {
     method: "GET",
     headers: {
@@ -49,12 +89,34 @@ let dataURL;
 
 let logOut = document.getElementById("logout");
 logOut.addEventListener("click", () => {
-    sessionStorage.clear();
+    let token = localStorage.getItem("Token");
+    fetch("http://localhost:3000/deleteToken", {
+        method: "GET",
+        headers: {
+            "authorization": token
+        }
+    })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                console.log(data.message);
+            }
+            else if (data.statusCode === "401") {
+                // console.log(data.message);
+                // window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
+    localStorage.removeItem("Token");
     window.location.href = "../html/login.html";
 });
 
 function userIsLoggedIn() {
-    let sessionVariable = sessionStorage.getItem("Token");
+    let sessionVariable = localStorage.getItem("Token");
     return !!sessionVariable;
 }
 
@@ -77,62 +139,68 @@ let projectForm = document.getElementById("project-form");
 let projectDiv = document.getElementById("allProjects");
 let expDiv = document.getElementById("exp");
 
-function handleFormSubmission() {
-    projectForm.addEventListener("submit", (e) => {
 
-        e.preventDefault();
+function handleFormSubmission(e) {
 
-        let projectNameInput = document.getElementById("projectName").value;
-        let projectDescriptionInput = document.getElementById("projectDescription").value;
-        let langTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
-        let liveLinkInput = document.getElementById("linkToLiveWebsite").value;
-        let repoLinkInput = document.getElementById("linkToRepo").value;
-        let imageSRC = dataURL;
+    e.preventDefault();
 
-        if (!projectNameInput || !projectDescriptionInput || langTags.length === 0 || !liveLinkInput || !repoLinkInput || !imageSRC) {
-            validateFormProject(projectNameInput, projectDescriptionInput, langTags, liveLinkInput, repoLinkInput, imageSRC);
-        } else {
-            projectForm.classList.add("hide");
+    let projectNameInput = document.getElementById("projectName").value;
+    let projectDescriptionInput = document.getElementById("projectDescription").value;
+    let langTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
+    let liveLinkInput = document.getElementById("linkToLiveWebsite").value;
+    let repoLinkInput = document.getElementById("linkToRepo").value;
+    let imageSRC = dataURL;
 
-            let projectData = {
-                projectNameData: projectNameInput,
-                projectDescription: projectDescriptionInput,
-                tags: langTags,
-                projectLiveLink: liveLinkInput,
-                projectRepo: repoLinkInput,
-                projectImg: imageSRC
+    if (!projectNameInput || !projectDescriptionInput || langTags.length === 0 || !liveLinkInput || !repoLinkInput || !imageSRC) {
+        validateFormProject(projectNameInput, projectDescriptionInput, langTags, liveLinkInput, repoLinkInput, imageSRC);
+    } else {
+        projectForm.classList.add("hide");
+
+        let projectData = {
+            projectNameData: projectNameInput,
+            projectDescription: projectDescriptionInput,
+            tags: langTags,
+            projectLiveLink: liveLinkInput,
+            projectRepo: repoLinkInput,
+            projectImg: imageSRC
+        }
+
+        saveProject(projectData);
+        projectDataToAppend(projectData);
+
+        fetch("http://localhost:3000/getProjects", {
+            method: "GET",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
             }
-
-            saveProject(projectData);
-            projectDataToAppend(projectData);
-
-            fetch("http://localhost:3000/getProjects", {
-                method: "GET",
-                headers: {
-                    "Content-type": "application/json",
-                    "authorization": token
-                }
+        })
+            .then(res => {
+                return res.json();
             })
-                .then(res => {
-                    return res.json();
-                })
-                .then(data => {
+            .then(data => {
+                if (data.statusCode === "200") {
                     console.log(data.data);
                     if (Array.isArray(data.data)) {
                         data.data.forEach((project, index) => {
                             viewProject(project);
                             editProject(project, index);
-                            deleteProject(index);
+                            deleteProject(project, index);
                         });
                     }
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-        }
-    });
+                    return;
+                }
+                else if (data.statusCode === "401") {
+                    console.log(data.message);
+                    localStorage.removeItem("Token");
+                    window.location.href == "/client/html/login.html";
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            })
+    }
 }
-
 
 addProjectIcon.addEventListener("click", () => {
     document.getElementById("projectName").value = "";
@@ -143,9 +211,17 @@ addProjectIcon.addEventListener("click", () => {
     document.getElementById("file").value = "";
 
     projectForm.classList.remove("hide");
-    handleFormSubmission();
+
+    projectForm.addEventListener("submit", (e) => {
+        handleFormSubmission(e);
+    });
+
 });
 
+let addProject = document.getElementById("addProject");
+addProject.addEventListener("click", () => {
+    projectForm.removeEventListener("submit", handleFormSubmission);
+});
 
 
 function openFile(e) {
@@ -156,6 +232,79 @@ function openFile(e) {
     };
     reader.readAsDataURL(input.files[0]);
 }
+
+let pdfURL;
+function openPdf(e) {
+    let input = e.target;
+    let reader = new FileReader();
+    reader.onload = () => {
+        pdfURL = reader.result;
+
+        const resumeLink = document.getElementById('resume-link');
+        resumeLink.setAttribute('href', pdfURL);
+
+        let data = {
+            pdfURL: pdfURL
+        }
+
+        fetch("http://localhost:3000/savePdf", {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.statusCode === "200") {
+                    console.log(data.message);
+                    fetchURL(pdfURL);
+                }
+                else if (data.statusCode === "401") {
+                    console.log(data.message);
+                    localStorage.removeItem("Token");
+                    window.location.href == "/client/html/login.html";
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+const resumeLink = document.getElementById('resume-link');
+
+function fetchURL(pdfURL) {
+    fetch("http://localhost:3000/getPdf",
+        {
+            method: "GET",
+            headers: {
+                "authorization": token
+            },
+            body: JSON.stringify(pdfURL)
+        })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                console.log(data.message);
+                resumeLink.setAttribute("href", data.data);
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
+}
+
+fetchURL(pdfURL);
 
 let crossIcon = document.getElementById("cross-icon");
 crossIcon.addEventListener("click", () => {
@@ -176,7 +325,15 @@ function saveProject(projectData) {
             return res.json();
         })
         .then(data => {
-            console.log(data.message);
+            if (data.statusCode === "200") {
+                console.log(data.message);
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+                return;
+            }
         })
         .catch(err => {
             console.log(err);
@@ -195,16 +352,24 @@ function getProjects() {
             return res.json();
         })
         .then(data => {
-            getAllData = data.data;
-            console.log(getAllData);
-            if (Array.isArray(getAllData)) {
-                getAllData.forEach((project, index) => {
-                    projectDataToAppend(project);
+            if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+            else if (data.statusCode === "200") {
+                getProjectData = data.data;
+                console.log(getProjectData);
 
-                    // viewProject(project);
-                    // editProject(project, index);
-                    // deleteProject(index);
-                });
+                if (Array.isArray(getProjectData)) {
+                    getProjectData.forEach((project, index) => {
+                        projectDataToAppend(project);
+
+                        viewProject(project);
+                        editProject(project, index);
+                        deleteProject(project, index);
+                    });
+                }
             }
         })
         .catch(err => {
@@ -264,9 +429,14 @@ function projectDataToAppend(projectData) {
     // Appending tags
     for (let tagText of projectData.tags) {
         let tag = document.createElement("span");
-        tag.classList.add("tag");
+        tag.classList.add("tag-" + (projectCounter - 1));
         tag.textContent = tagText;
         tagsContainer.appendChild(tag);
+
+        tag.style.padding = ".3em .5em";
+        tag.style.backgroundColor = "#4b5cbe";
+        tag.style.color = "white";
+        tag.style.margin = "1em .5em 1em 0"
     }
 
     projectSection.appendChild(tagsContainer);
@@ -292,23 +462,18 @@ function projectDataToAppend(projectData) {
 
     projectCounter++;
 
-    // deleteBTN.onclick() = deleteIt();
-    //project counter i have = 1
-    /**
-     * delete counter - 1
-     */
 }
-
-// deleteIt()
 
 function editProject(project, index) {
     let projectSection = document.getElementById("allProjects");
+
     projectSection.addEventListener("click", (e) => {
         let target = e.target;
+
         if (target.classList.contains("edit-project")) {
             let heading = target.parentElement.parentElement.firstElementChild;
-            if (project.projectNameData === heading.innerHTML) {
 
+            if (project.projectNameData === heading.innerHTML) {
                 let projectArticle = e.target.closest("article");
                 let liveButton = projectArticle.getElementsByClassName("liveBTN")[0];
                 let repoButton = projectArticle.getElementsByClassName("repoBTN")[0];
@@ -318,13 +483,15 @@ function editProject(project, index) {
 
                 projectForm.classList.remove("hide");
                 let para = heading.nextElementSibling;
-                let tags = document.querySelectorAll(".tag");
+                let tags = document.querySelectorAll(".tag-" + index);
                 let livehref = link.getAttribute('href');
                 let repohref = repo.getAttribute('href');
 
+                let projectImage = e.target.parentElement.parentElement.nextElementSibling;
+                projectImage.src = "";
+
                 let tagValues = Array.from(tags).map(tagElement => tagElement.innerHTML);
                 tagValues = tagValues.join(", ");
-                // console.log(tagValues);
 
                 document.getElementById("projectName").value = heading.innerHTML;
                 document.getElementById("projectDescription").value = para.innerHTML;
@@ -333,16 +500,16 @@ function editProject(project, index) {
                 document.getElementById("linkToRepo").value = repohref;
                 document.getElementById("file").value = "";
 
-                projectForm.addEventListener("submit", handleSubmit);
+                // Add the event listener with necessary parameters
+                // projectForm.addEventListener("submit", (e) => {
+                //     handleSubmit(e, tags, index, livehref, repohref);
+                // });
 
-                function handleSubmit(e) {
+                let addEditedProject = document.getElementById("addProject");
+                addEditedProject.addEventListener("click", (e) => {
                     e.preventDefault();
                     projectForm.classList.add("hide");
 
-                    let projectName = heading.innerHTML;
-
-                    let projectImage = target.parentElement.parentElement.nextElementSibling;
-                    projectImage.src = "";
 
                     heading.innerHTML = document.getElementById("projectName").value;
                     para.innerHTML = document.getElementById("projectDescription").value;
@@ -380,61 +547,174 @@ function editProject(project, index) {
                             return res.json();
                         })
                         .then(data => {
-                            console.log(data.data);
+                            if (data.statusCode === "200") {
+                                console.log(data.data);
+
+                            }
+                            else if (data.statusCode === "401") {
+                                console.log(data.message);
+                                localStorage.removeItem("Token");
+                                window.location.href == "/client/html/login.html";
+                            }
                         })
                         .catch(err => {
                             console.log(err);
                         })
-                }
+
+                    fetch("http://localhost:3000/getProjects", {
+                        method: "GET",
+                        headers: {
+                            "Content-type": "application/json",
+                            "authorization": token
+                        }
+                    })
+                        .then(res => {
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.statusCode === "401") {
+                                console.log(data.message);
+                                localStorage.removeItem("Token");
+                                window.location.href == "/client/html/login.html";
+                            }
+                            else if (data.statusCode === "200") {
+                                getProjectData = data.data;
+                                console.log(getProjectData);
+
+                                if (Array.isArray(getProjectData)) {
+                                    getProjectData.forEach((project, index) => {
+
+                                        viewProject(project);
+                                        editProject(project, index);
+                                        deleteProject(project, index);
+                                    });
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        })
+
+                })
+
             }
         }
     });
 }
 
-// function deleteProject(index) {
-//     let projectSection = document.getElementById("allProjects");
-//     projectSection.addEventListener("click", (e) => {
-//         console.log("HSHDHS", index);
-//         let target = e.target;
-//         if (target.classList.contains("delete-project")) {
-//             let parentElementDiv = target.parentElement.parentElement;
-//             let projectImage = parentElementDiv.nextElementSibling;
+// let addEditedProject = document.getElementById("addProject");
 
-//             console.log(projectSection.childNodes[index]);
+// addEditedProject.addEventListener("click", () => {
+//     projectForm.removeEventListener("submit", handleSubmit);
+// });
 
-//             // let heading = parentElementDiv.firstElementChild;
-//             // console.log(parentElementDiv, projectImage);
+// function handleSubmit(e, tags, index, livehref, repohref) {
 
-//             console.log(index);
+//     e.preventDefault();
+//     projectForm.classList.add("hide");
+//     let heading = e.target.parentElement.parentElement.firstElementChild;
+//     let projectName = heading.innerHTML;
+//     let para = heading.nextElementSibling;
 
-//             projectSection.removeChild(parentElementDiv);
-//             projectSection.removeChild(projectImage);
+//     let projectImage = e.target.parentElement.parentElement.nextElementSibling;
+//     projectImage.src = "";
 
+//     projectName = document.getElementById("projectName").value;
+//     para.innerHTML = document.getElementById("projectDescription").value;
+//     let newTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
 
-//             fetch(`http://localhost:3000/deleteProject/${index}`, {
-//                 method: "DELETE",
-//                 headers: {
-//                     "Content-type": "application/json",
-//                     "authorization": token
-//                 }
-//             })
-//                 .then((res) => {
-//                     if (res.status === 204) {
-//                         console.log("Project Deleted")
-//                     } else {
-//                     }
-//                 })
-//                 .catch((error) => {
-//                     console.error("Error:", error);
-//                 });
+//     newTags.forEach((tagValue, index) => {
+//         tags[index].innerHTML = tagValue;
+//         console.log(tags);
+//     })
+//     livehref = document.getElementById("linkToLiveWebsite").value;
+//     repohref = document.getElementById("linkToRepo").value;
+//     projectImage.src = dataURL;
 
-//         }
-//     });
+//     let allTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
+
+//     let saveEditedData = {
+//         indexValue: index,
+//         projectNameData: heading.innerHTML,
+//         projectDescription: para.innerHTML,
+//         tags: allTags,
+//         projectLiveLink: livehref,
+//         projectRepo: repohref,
+//         projectImg: projectImage.src
+//     };
+
+//     fetch("http://localhost:3000/saveEditedProject", {
+//         method: "POST",
+//         headers: {
+//             "Content-type": "application/json",
+//             "authorization": token
+//         },
+//         body: JSON.stringify(saveEditedData)
+//     })
+//         .then(res => {
+//             return res.json();
+//         })
+//         .then(data => {
+//             if (data.statusCode === "200") {
+//                 console.log(data.data);
+//             }
+//             else if (data.statusCode === "401") {
+//                 console.log(data.message);
+//                 localStorage.removeItem("Token");
+//                 window.location.href == "/client/html/login.html";
+//             }
+//         })
+//         .catch(err => {
+//             console.log(err);
+//         })
 // }
 
 
+function deleteProject(project, index) {
+    let projectSection = document.getElementById("allProjects");
+    projectSection.addEventListener("click", (e) => {
+        let target = e.target;
+        if (target.classList.contains("delete-project")) {
+            let parentElementDiv = target.parentElement.parentElement;
+            let heading = parentElementDiv.firstChild;
+            let projectImage = parentElementDiv.nextElementSibling;
+
+            if (project.projectNameData === heading.innerHTML) {
+
+                projectSection.removeChild(parentElementDiv);
+                projectSection.removeChild(projectImage);
+
+
+                fetch(`http://localhost:3000/deleteProject/${index}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-type": "application/json",
+                        "authorization": token
+                    }
+                })
+                    .then((res) => {
+                        res.json
+                    })
+                    .then(data => {
+                        if (data.statusCode === "200") {
+                            console.log("Project Deleted")
+                        }
+                        if (data.statusCode === "401") {
+                            console.log(data.message);
+                            localStorage.removeItem("Token");
+                            window.location.href == "/client/html/login.html";
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                    });
+            }
+
+        }
+    });
+}
+
 function viewProject(fetchusersProject) {
-    console.log('hihihihihi', fetchusersProject);
 
     let projectView = document.getElementById("popUp");
     let projectDiv = document.getElementById("allProjects");
@@ -490,6 +770,17 @@ crossViewProject.addEventListener("click", (e) => {
     }
 })
 
+// const resumeInput = document.getElementById('resume');
+// const resumeLink = document.getElementById('resume-link');
+// resumeLink.setAttribute("href", dataURL);
+
+// resumeInput.addEventListener('click', (e) => {
+
+//     const selectedFile = resumeInput.files[0];
+//     const fileURL = URL.createObjectURL(selectedFile);
+
+
+// });
 
 /* ----------------------------------------------------------------------------------*/
 /* ------------------------ Content Editable Data -----------------------------------*/
@@ -541,7 +832,14 @@ function contentEditabaleData() {
             return res.json();
         })
         .then(data => {
-            // console.log(data.message);
+            if (data.statusCode === "401") {
+                window.location.href == "/client/html/login.html";
+                console.log(data.message);
+                localStorage.removeItem("Token");
+            }
+            else if (data.statusCode === "200") {
+                console.log(data.message);
+            }
         })
         .catch(err => {
             console.log(err);
@@ -560,9 +858,16 @@ function fetchPreviousData() {
             return res.json();
         })
         .then(data => {
-            console.log(data);
-            editableData[0].innerHTML = data.data.position;
-            editableData[1].innerHTML = data.data.aboutMe;
+            if (data.statusCode === "200") {
+                console.log(data);
+                editableData[0].innerHTML = data.data.position;
+                editableData[1].innerHTML = data.data.aboutMe;
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
         })
         .catch(err => {
             console.log(err);
@@ -652,7 +957,7 @@ addExp.addEventListener("click", () => {
         e.preventDefault();
         let expPosition = document.getElementById("experiencePos").value;
         let companyName = document.getElementById("company").value;
-        let expDuration = document.getElementById("duration").value;
+        let expDuration = document.getElementById("duration").value + " months";
         let jobDescription = document.getElementById("jobInfo").value;
 
         if (!expPosition || !companyName || !expDuration || !jobDescription) {
@@ -660,7 +965,6 @@ addExp.addEventListener("click", () => {
         } else {
             expForm.classList.add("hide");
             let expData = {
-                expID: id,
                 position: expPosition,
                 company: companyName,
                 duration: expDuration,
@@ -668,6 +972,37 @@ addExp.addEventListener("click", () => {
             }
 
             saveExp(expData);
+            appendExp(expData)
+
+            fetch("http://localhost:3000/getExp", {
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json",
+                    "authorization": token
+                }
+            })
+                .then(res => {
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.statusCode === "200") {
+                        console.log(data.data);
+                        if (Array.isArray(data.data)) {
+                            data.data.forEach((exp, index) => {
+                                editExp(exp, index);
+                                deleteExp(exp, index);
+                            });
+                        }
+                    }
+                    else if (data.statusCode === "401") {
+                        console.log(data.message);
+                        localStorage.removeItem("Token");
+                        window.location.href == "/client/html/login.html";
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                })
         }
     })
 })
@@ -678,71 +1013,122 @@ crossExp.addEventListener("click", () => {
 })
 
 function saveExp(expData) {
-    let temp = JSON.parse(localStorage.getItem("exp")) || [];
-    temp.push(expData);
-    localStorage.setItem("exp", JSON.stringify(temp));
+    fetch("http://localhost:3000/saveExp",
+        {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
+            },
+            body: JSON.stringify(expData)
+        })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                console.log(data.message);
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
 
 }
 
-function appendExp() {
-    let getExpData = JSON.parse(localStorage.getItem("exp")) || [];
-    for (let eachData of getExpData) {
+function appendExp(expData) {
 
-        // Creating all the necessary elements
-        let expSection = document.createElement("div");
-        let expContentDiv = document.createElement("div");
-        let expName = document.createElement("h3");
-        let company = document.createElement("h4");
-        let expDuration = document.createElement("p");
-        let expDescription = document.createElement("p");
+    // Creating all the necessary elements
+    let expSection = document.createElement("div");
+    let expContentDiv = document.createElement("div");
+    let expName = document.createElement("h3");
+    let company = document.createElement("h4");
+    let expDuration = document.createElement("p");
+    let expDescription = document.createElement("p");
 
-        let editBTN = document.createElement("img");
-        let deleteBTN = document.createElement("img");
+    let editBTN = document.createElement("img");
+    let deleteBTN = document.createElement("img");
 
-        // Adding all the required classes
-        expSection.classList.add("experienceDiv");
-        expContentDiv.classList.add("expContentDiv");
-        expName.setAttribute("id", "developerPos");
-        company.setAttribute("id", "CompanyName");
-        expDuration.setAttribute("id", "expDuration");
-        expDescription.setAttribute("id", "expDescription");
+    // Adding all the required classes
+    expSection.classList.add("experienceDiv");
+    expContentDiv.classList.add("expContentDiv");
+    expName.setAttribute("id", "developerPos");
+    company.setAttribute("id", "CompanyName");
+    expDuration.setAttribute("id", "expDuration");
+    expDescription.setAttribute("id", "expDescription");
 
-        deleteBTN.classList.add("delete-exp");
-        editBTN.classList.add("edit-exp");
-
-        if (eachData.expID === id) {
-
-            expName.innerHTML = eachData.position;
-            company.innerHTML = eachData.company;
-            expDuration.innerHTML = eachData.duration;
-            expDescription.innerHTML = eachData.jobInfo;
+    deleteBTN.classList.add("delete-exp");
+    editBTN.classList.add("edit-exp");
 
 
-            deleteBTN.setAttribute("src", "../assets/editable-icon/delete.png");
-            editBTN.setAttribute("src", "../assets/editable-icon/edit.png");
-
-            let expMainDiv = document.getElementById("exp-main-div");
-
-            // Appending all the elements
-            expMainDiv.appendChild(expSection);
-            expSection.appendChild(expContentDiv);
-            expContentDiv.appendChild(expName);
-            expContentDiv.appendChild(company);
-            expContentDiv.appendChild(expDuration);
-            expContentDiv.appendChild(expDescription);
+    expName.innerHTML = expData.position;
+    company.innerHTML = expData.company;
+    expDuration.innerHTML = expData.duration;
+    expDescription.innerHTML = expData.jobInfo;
 
 
-            let editButtons = document.createElement("div");
-            editButtons.classList.add("edit-buttons");
+    deleteBTN.setAttribute("src", "../assets/editable-icon/delete.png");
+    editBTN.setAttribute("src", "../assets/editable-icon/edit.png");
 
-            editButtons.appendChild(deleteBTN);
-            editButtons.appendChild(editBTN);
-            expSection.appendChild(editButtons);
+    let expMainDiv = document.getElementById("exp-main-div");
+
+    // Appending all the elements
+    expMainDiv.appendChild(expSection);
+    expSection.appendChild(expContentDiv);
+    expContentDiv.appendChild(expName);
+    expContentDiv.appendChild(company);
+    expContentDiv.appendChild(expDuration);
+    expContentDiv.appendChild(expDescription);
+
+
+    let editButtons = document.createElement("div");
+    editButtons.classList.add("edit-buttons");
+
+    editButtons.appendChild(deleteBTN);
+    editButtons.appendChild(editBTN);
+    expSection.appendChild(editButtons);
+}
+
+function getExp() {
+    fetch("http://localhost:3000/getExp", {
+        method: "GET",
+        headers: {
+            "Content-type": "application/json",
+            "authorization": token
         }
-    }
-}
+    })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                getExpData = data.data;
+                console.log(getExpData);
+                if (Array.isArray(getExpData)) {
+                    getExpData.forEach((exp, index) => {
+                        appendExp(exp);
 
-appendExp();
+                        editExp(exp, index);
+                        deleteExp(exp, index);
+                    });
+                }
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
+}
+getExp();
 
 function validateFormExp(expPosition, companyName, expDuration, jobDescription) {
     let errorLabel = document.querySelector(".error-message");
@@ -788,10 +1174,8 @@ function removeErrorMessage() {
     }
 }
 
-function editExp() {
+function editExp(expData, existingIndex) {
     let editButtonClick = document.querySelectorAll(".edit-exp");
-    console.log(editButtonClick)
-    let expArray = JSON.parse(localStorage.getItem("exp"));
     // let expMainDiv = document.getElementById("exp-main-div");
 
     for (let eachData of editButtonClick) {
@@ -805,59 +1189,106 @@ function editExp() {
             expForm.classList.remove("hide");
             let heading = eachData.parentElement.parentElement.firstChild.firstElementChild;
             let companyName = heading.nextElementSibling;
-            let duration = companyName.nextElementSibling;
-            let jobDescription = duration.nextElementSibling;
+            let jobDuration = companyName.nextElementSibling;
+            let jobDescription = jobDuration.nextElementSibling;
 
             document.getElementById("experiencePos").value = heading.innerHTML;
             document.getElementById("company").value = companyName.innerHTML;
-            document.getElementById("duration").value = duration.innerHTML;
+            document.getElementById("duration").value = jobDuration.innerHTML;
             document.getElementById("jobInfo").value = jobDescription.innerHTML;
 
             addExp.addEventListener("click", (e) => {
+                e.preventDefault();
                 expForm.classList.add("hide");
 
                 let JobCompany = companyName.innerHTML;
-                let expToUpdate = expArray.find(exp => exp.company === JobCompany);
-                e.preventDefault();
-                if (expToUpdate) {
-                    expToUpdate.position = document.getElementById("experiencePos").value;
-                    expToUpdate.company = document.getElementById("company").value;
-                    expToUpdate.duration = document.getElementById("duration").value;
-                    expToUpdate.jobInfo = document.getElementById("jobInfo").value;
+                if (expData.company === JobCompany) {
+                    console.log(expData.company);
+                    console.log(JobCompany);
 
-                    localStorage.setItem("exp", JSON.stringify(expArray));
+                    heading.innerHTML = document.getElementById("experiencePos").value;
+                    companyName.innerHTML = document.getElementById("company").value;
+                    jobDuration.innerHTML = document.getElementById("duration").value + " months";
+                    jobDescription.innerHTML = document.getElementById("jobInfo").value;
+
+                    console.log(heading, companyName, jobDuration, jobDescription);
+
+                    let saveEditedExpData = {
+                        indexValue: existingIndex,
+                        position: heading.innerHTML,
+                        company: companyName.innerHTML,
+                        duration: jobDuration.innerHTML,
+                        jobInfo: jobDescription.innerHTML
+                    }
+
+                    fetch("http://localhost:3000/saveEditedExp", {
+                        method: "POST",
+                        headers: {
+                            "Content-type": "application/json",
+                            "authorization": token
+                        },
+                        body: JSON.stringify(saveEditedExpData)
+                    })
+                        .then(res => {
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.statusCode === "200") {
+                                console.log(data.data);
+                            }
+                            else if (data.statusCode === "401") {
+                                console.log(data.message);
+                                localStorage.removeItem("Token");
+                                window.location.href == "/client/html/login.html";
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        })
                 }
             });
         });
 
     }
-
 }
 
-editExp();
-
-function deleteExp() {
+function deleteExp(exp, index) {
     let deleteButtonClick = document.querySelectorAll(".delete-exp");
-    let expArray = JSON.parse(localStorage.getItem("exp"));
     let expMainDiv = document.getElementById("exp-main-div");
 
     for (let eachdata of deleteButtonClick) {
         eachdata.addEventListener("click", () => {
             let heading = eachdata.parentElement.parentElement.firstChild.firstElementChild;
-            let existingIndex = expArray.findIndex(exp => exp.position === heading.innerHTML);
-            console.log(existingIndex);
-            if (existingIndex !== -1) {
-                expArray.splice(existingIndex, 1);
-                localStorage.setItem("exp", JSON.stringify(expArray));
 
-                let parentElement = eachdata.parentElement.parentElement;
-                expMainDiv.removeChild(parentElement);
+            if (exp.position === heading.innerHTML) {
+
+                let targetExp = eachdata.parentElement.parentElement;
+                expMainDiv.removeChild(targetExp);
+
+                fetch(`http://localhost:3000/deleteExp/${index}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-type": "application/json",
+                        "authorization": token
+                    }
+                })
+                    .then((res) => {
+                        if (res.status === 204) {
+                            console.log("Exp Deleted")
+                        } else if (res.status === 401) {
+                            console.log(data.message);
+                            localStorage.removeItem("Token");
+                            window.location.href == "/client/html/login.html";
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                    });
             }
 
         })
     }
 }
-deleteExp();
 
 /* ----------------------------------------------------------------------------------*/
 /* ------------------------------- Education ---------------------------------------*/
@@ -876,14 +1307,13 @@ addEdu.addEventListener("click", () => {
         let eduDegree = document.getElementById("degree").value;
         let eduUni = document.getElementById("university").value;
         let eduCgpa = document.getElementById("cgpa").value;
-        let eduDuration = document.getElementById("uniDuration").value;
+        let eduDuration = document.getElementById("uniDuration").value + " years";
 
         if (!eduDegree || !eduUni || !eduCgpa || !eduDuration) {
             validateForm(eduDegree, eduUni, eduCgpa, eduDuration);
         } else {
             eduForm.classList.add("hide");
             let eduData = {
-                eduID: id,
                 degree: eduDegree,
                 university: eduUni,
                 cgpa: eduCgpa,
@@ -891,6 +1321,37 @@ addEdu.addEventListener("click", () => {
             }
 
             saveEdu(eduData);
+            appendEdu(eduData);
+
+            fetch("http://localhost:3000/getEdu", {
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json",
+                    "authorization": token
+                }
+            })
+                .then(res => {
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.statusCode === "200") {
+                        console.log(data.data);
+                        if (Array.isArray(data.data)) {
+                            data.data.forEach((edu, index) => {
+                                editEdu(edu, index);
+                                deleteEdu(edu, index);
+                            });
+                        }
+                    }
+                    else if (data.statusCode === "401") {
+                        console.log(data.message);
+                        localStorage.removeItem("Token");
+                        window.location.href == "/client/html/login.html";
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                })
         }
     })
 })
@@ -900,78 +1361,127 @@ crossEdu.addEventListener("click", () => {
 })
 
 function saveEdu(eduData) {
-    let temp = JSON.parse(localStorage.getItem("edu")) || [];
-    temp.push(eduData);
-    localStorage.setItem("edu", JSON.stringify(temp));
+    fetch("http://localhost:3000/saveEdu",
+        {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
+            },
+            body: JSON.stringify(eduData)
+        })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                console.log(data.message);
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
+
 }
 
-function appendEdu() {
-    let getEduData = JSON.parse(localStorage.getItem("edu")) || [];
+function appendEdu(eduData) {
 
-    for (let eachData of getEduData) {
+    // Creating all the necessary elements
+    let eduSection = document.createElement("div");
+    let eduContentDiv = document.createElement("div");
+    let eduDegree = document.createElement("h3");
+    let eduUni = document.createElement("h4");
+    let eduCgpa = document.createElement("span");
+    let eduDuration = document.createElement("p");
 
-        // Creating all the necessary elements
-        let eduSection = document.createElement("div");
-        let eduContentDiv = document.createElement("div");
-        let eduDegree = document.createElement("h3");
-        let eduUni = document.createElement("h4");
-        let eduCgpa = document.createElement("span");
-        let eduDuration = document.createElement("p");
+    let editBTN = document.createElement("img");
+    let deleteBTN = document.createElement("img");
 
-        let editBTN = document.createElement("img");
-        let deleteBTN = document.createElement("img");
+    // Adding all the required classes
+    eduSection.classList.add("educationDiv");
+    eduContentDiv.classList.add("eduContentDiv");
+    eduDegree.setAttribute("id", "degreeName");
+    eduUni.setAttribute("id", "uniName");
+    eduCgpa.setAttribute("id", "eduCgpa");
+    eduDuration.setAttribute("id", "eduDuration");
 
-        // Adding all the required classes
-        eduSection.classList.add("educationDiv");
-        eduContentDiv.classList.add("eduContentDiv");
-        eduDegree.setAttribute("id", "degreeName");
-        eduUni.setAttribute("id", "uniName");
-        eduCgpa.setAttribute("id", "eduCgpa");
-        eduDuration.setAttribute("id", "eduDuration");
+    deleteBTN.classList.add("delete-edu");
+    editBTN.classList.add("edit-edu");
 
-        deleteBTN.classList.add("delete-edu");
-        editBTN.classList.add("edit-edu");
-
-        if (eachData.eduID === id) {
-
-            eduDegree.innerHTML = eachData.degree;
-            eduUni.innerHTML = eachData.university;
-            eduCgpa.innerHTML = eachData.cgpa;
-            eduDuration.innerHTML = eachData.duration;
+    eduDegree.innerHTML = eduData.degree;
+    eduUni.innerHTML = eduData.university;
+    eduCgpa.innerHTML = eduData.cgpa;
+    eduDuration.innerHTML = eduData.duration;
 
 
-            deleteBTN.setAttribute("src", "../assets/editable-icon/delete.png");
-            editBTN.setAttribute("src", "../assets/editable-icon/edit.png");
+    deleteBTN.setAttribute("src", "../assets/editable-icon/delete.png");
+    editBTN.setAttribute("src", "../assets/editable-icon/edit.png");
 
-            let eduMainDiv = document.getElementById("edu-main-div");
+    let eduMainDiv = document.getElementById("edu-main-div");
 
-            // Appending all the elements
-
-
-            eduMainDiv.appendChild(eduSection);
-            eduSection.appendChild(eduContentDiv);
-            eduContentDiv.appendChild(eduDegree);
-            eduContentDiv.appendChild(eduUni);
-            eduContentDiv.appendChild(eduCgpa);
-            eduContentDiv.appendChild(eduDuration);
+    // Appending all the elements
 
 
-            let editButtons = document.createElement("div");
-            editButtons.classList.add("edit-buttons");
+    eduMainDiv.appendChild(eduSection);
+    eduSection.appendChild(eduContentDiv);
+    eduContentDiv.appendChild(eduDegree);
+    eduContentDiv.appendChild(eduUni);
+    eduContentDiv.appendChild(eduCgpa);
+    eduContentDiv.appendChild(eduDuration);
 
-            editButtons.appendChild(deleteBTN);
-            editButtons.appendChild(editBTN);
-            eduSection.appendChild(editButtons);
 
+    let editButtons = document.createElement("div");
+    editButtons.classList.add("edit-buttons");
+
+    editButtons.appendChild(deleteBTN);
+    editButtons.appendChild(editBTN);
+    eduSection.appendChild(editButtons);
+
+}
+
+function getEdu() {
+    fetch("http://localhost:3000/getEdu", {
+        method: "GET",
+        headers: {
+            "Content-type": "application/json",
+            "authorization": token
         }
-    }
-}
-appendEdu();
+    })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "200") {
+                getEduData = data.data;
+                console.log(getEduData);
+                if (Array.isArray(getEduData)) {
+                    getEduData.forEach((edu, index) => {
+                        appendEdu(edu);
 
-function editEdu() {
+                        editEdu(edu, index);
+                        deleteEdu(edu, index);
+                    });
+                }
+            }
+            else if (data.statusCode === "401") {
+                console.log(data.message);
+                localStorage.removeItem("Token");
+                window.location.href == "/client/html/login.html";
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        })
+}
+getEdu();
+
+function editEdu(eduData, indexValue) {
     let editButtonClick = document.querySelectorAll(".edit-edu");
-    let eduArray = JSON.parse(localStorage.getItem("edu"));
-    // console.log(eduArray);
 
     for (let eachdata of editButtonClick) {
         let eduForm = document.getElementById("edu-form");
@@ -984,7 +1494,6 @@ function editEdu() {
             let cgpaCount = uniName.nextElementSibling;
             let durationCount = cgpaCount.nextElementSibling;
 
-            console.log(degreeName, uniName, cgpaCount, durationCount);
 
             document.getElementById("degree").value = degreeName.innerHTML;
             document.getElementById("university").value = uniName.innerHTML;
@@ -995,19 +1504,44 @@ function editEdu() {
                 e.preventDefault();
                 eduForm.classList.add("hide");
                 let degreeName = eachdata.parentElement.parentElement.firstChild.firstElementChild;
-                let eduToUpdate = eduArray.find(ed => ed.degree === degreeName.innerHTML);
-                if (eduToUpdate) {
-                    eduToUpdate.degree = document.getElementById("degree").value;
-                    eduToUpdate.university = document.getElementById("university").value;
-                    eduToUpdate.cgpa = document.getElementById("cgpa").value;
-                    eduToUpdate.duration = document.getElementById("uniDuration").value;
-
-                    localStorage.setItem("edu", JSON.stringify(eduArray));
+                if (eduData.degree === degreeName.innerHTML) {
 
                     degreeName.innerHTML = document.getElementById("degree").value;
                     uniName.innerHTML = document.getElementById("university").value;
                     cgpaCount.innerHTML = document.getElementById("cgpa").value;
-                    durationCount.innerHTML = document.getElementById("uniDuration").value;
+                    durationCount.innerHTML = document.getElementById("uniDuration").value + "  years";
+
+                    let saveEditededuData = {
+                        index: indexValue,
+                        degree: degreeName.innerHTML,
+                        university: uniName.innerHTML,
+                        cgpa: cgpaCount.innerHTML,
+                        duration: durationCount.innerHTML,
+                    }
+                    fetch("http://localhost:3000/saveEditedEdu", {
+                        method: "POST",
+                        headers: {
+                            "Content-type": "application/json",
+                            "authorization": token
+                        },
+                        body: JSON.stringify(saveEditededuData)
+                    })
+                        .then(res => {
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.statusCode === "200") {
+                                console.log(data.message);
+                            }
+                            else if (data.statusCode === "401") {
+                                console.log(data.message);
+                                localStorage.removeItem("Token");
+                                window.location.href == "/client/html/login.html";
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        })
 
                 }
             });
@@ -1015,29 +1549,45 @@ function editEdu() {
     }
 
 }
-editEdu();
 
-function deleteEdu() {
+function deleteEdu(eduData, index) {
     let deleteButtonClick = document.querySelectorAll(".delete-edu");
-    let eduArray = JSON.parse(localStorage.getItem("edu"));
     let mainParent = document.getElementById("edu-main-div");
 
     for (let eachdata of deleteButtonClick) {
         eachdata.addEventListener("click", () => {
             let heading = eachdata.parentElement.parentElement.firstChild.firstElementChild;
-            console.log(heading);
-            let existingIndex = eduArray.findIndex(edu => edu.degree === heading.innerHTML);
-            console.log(existingIndex);
-            if (existingIndex !== -1) {
-                eduArray.splice(existingIndex, 1);
-                localStorage.setItem("edu", JSON.stringify(eduArray));
-                let parentElement = eachdata.parentElement.parentElement;
-                mainParent.removeChild(parentElement);
-            }
+
+            if (eduData.degree === heading.innerHTML);
+
+            let parentElement = eachdata.parentElement.parentElement;
+            mainParent.removeChild(parentElement);
+
+            fetch(`http://localhost:3000/deleteEdu/${index}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-type": "application/json",
+                    "authorization": token
+                }
+            })
+                .then((res) => {
+                    if (res.status === 204) {
+                        console.log("Edu Deleted")
+                    }
+                })
+                .then(data => {
+                    if (data.statusCode === "401") {
+                        console.log(data.message);
+                        localStorage.removeItem("Token");
+                        window.location.href == "/client/html/login.html";
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
         })
     }
 }
-deleteEdu();
 
 function validateForm(eduDegree, eduUni, eduCgpa, eduDuration) {
     let errorLabel = document.querySelector(".error-message");
@@ -1088,26 +1638,42 @@ function removeErrorMessage() {
 /* ------------------------------- Attaching Social ----------------------------------*/
 /* ----------------------------------------------------------------------------------*/
 
-// let githubAcc = document.getElementById("github-acc");
-// let linkedInAcc = document.getElementById("linkedin-acc");
-// let twitterAcc = document.getElementById("twitter-acc");
-// let getAccountsInfo = JSON.parse(localStorage.getItem("socials"));
+let githubAcc = document.getElementById("github-acc");
+let linkedInAcc = document.getElementById("linkedin-acc");
+let twitterAcc = document.getElementById("twitter-acc");
+
+fetch("http://localhost:3000/appendSocials", {
+    method: "GET",
+    headers: {
+        "Content-type": "application/json",
+        "authorization": token
+    }
+})
+    .then(res => {
+        return res.json();
+    })
+    .then(data => {
+        if (data.statusCode === "200") {
+            let getSocialsData = data.data;
+            console.log(getSocialsData);
+            githubAcc.setAttribute("href", getSocialsData.githubLink);
+            linkedInAcc.setAttribute("href", getSocialsData.linkedinLink);
+            twitterAcc.setAttribute("href", getSocialsData.twitterlink);
+        }
+        else if (data.statusCode === "401") {
+            console.log(data.message);
+            window.location.href == "/client/html/login.html";
+        }
+    })
+    .catch(err => {
+        console.log(err);
+    })
 
 
-// if (getAccountsInfo.socialID === id) {
-//     console.log(getAccountsInfo.LinkedinLink);
-
-//     githubAcc.setAttribute("href", getAccountsInfo.githubLink);
-//     linkedInAcc.setAttribute("href", getAccountsInfo.linkedinLink);
-//     twitterAcc.setAttribute("href", getAccountsInfo.twitterlink);
-// }
 
 /* ----------------------------------------------------------------------------------*/
 /* ----------------------------------- Search ---------------------------------------*/
 /* ----------------------------------------------------------------------------------*/
-
-let experience = JSON.parse(localStorage.getItem("exp"));
-let projects = JSON.parse(localStorage.getItem("projects"));
 
 let selectedElementsDivExp = document.getElementById("selectedElementExp");
 let selectedElementsDivProject = document.getElementById("selectedElementProject");
@@ -1132,7 +1698,7 @@ searchBar.addEventListener("input", () => {
     projectslist.classList.add("hide");
     explist.classList.add("hide");
 
-    projects.forEach((projectData) => {
+    getProjectData.forEach((projectData) => {
         let projectTags = projectData.tags;
         let projectMatches =
             (projectData.projectNameData.toLowerCase().includes(inputData) ||
@@ -1150,7 +1716,7 @@ searchBar.addEventListener("input", () => {
         }
 
     });
-    experience.forEach((expData) => {
+    getExpData.forEach((expData) => {
         let expMatches =
             (expData.company.toLowerCase().includes(inputData) ||
                 expData.duration.toLowerCase().includes(inputData) ||
@@ -1192,64 +1758,59 @@ searchBar.addEventListener("input", () => {
 
     if (searchResultExp.length > 0) {
         searchResultExp.forEach((result) => {
+
+            tableRowExp.appendChild(postionName);
+            tableRowExp.appendChild(companysName);
+            tableRowExp.appendChild(durationTime);
+            tableRowExp.appendChild(positionDetail);
+
             // console.log(result);
-            if (result.exp.expID === id) {
+            let dataRowExp = document.createElement("tr");
 
-                tableRowExp.appendChild(postionName);
-                tableRowExp.appendChild(companysName);
-                tableRowExp.appendChild(durationTime);
-                tableRowExp.appendChild(positionDetail);
+            dataRowExp.classList.add("table-row");
 
-                console.log(result);
-                let dataRowExp = document.createElement("tr");
+            let positionTD = document.createElement("td");
+            let companyTD = document.createElement("td");
+            let durationTD = document.createElement("td");
+            let detailTD = document.createElement("td");
 
-                dataRowExp.classList.add("table-row");
+            positionTD.innerHTML = result.exp.position;
+            companyTD.innerHTML = result.exp.company;
+            durationTD.innerHTML = result.exp.duration;
+            detailTD.innerHTML = result.exp.jobInfo;
 
-                let positionTD = document.createElement("td");
-                let companyTD = document.createElement("td");
-                let durationTD = document.createElement("td");
-                let detailTD = document.createElement("td");
+            dataRowExp.appendChild(positionTD);
+            dataRowExp.appendChild(companyTD);
+            dataRowExp.appendChild(durationTD);
+            dataRowExp.appendChild(detailTD);
 
-                positionTD.innerHTML = result.exp.position;
-                companyTD.innerHTML = result.exp.company;
-                durationTD.innerHTML = result.exp.duration;
-                detailTD.innerHTML = result.exp.jobInfo;
-
-                dataRowExp.appendChild(positionTD);
-                dataRowExp.appendChild(companyTD);
-                dataRowExp.appendChild(durationTD);
-                dataRowExp.appendChild(detailTD);
-
-                selectedElementsDivExp.appendChild(dataRowExp);
-            }
+            selectedElementsDivExp.appendChild(dataRowExp);
         });
     }
     if (searchResultProject.length > 0) {
         searchResultProject.forEach((result) => {
-            if (result.project.projectID === id) {
-                tableRowProject.appendChild(projectNameth);
-                tableRowProject.appendChild(projectDescriptionth);
-                tableRowProject.appendChild(projectTagsth);
+            tableRowProject.appendChild(projectNameth);
+            tableRowProject.appendChild(projectDescriptionth);
+            tableRowProject.appendChild(projectTagsth);
 
-                console.log(result);
-                let dataRowProject = document.createElement("tr");
+            // console.log(result);
+            let dataRowProject = document.createElement("tr");
 
-                dataRowProject.classList.add("table-row");
+            dataRowProject.classList.add("table-row");
 
-                let pNameTD = document.createElement("td");
-                let pDesTD = document.createElement("td");
-                let pTagTD = document.createElement("td");
+            let pNameTD = document.createElement("td");
+            let pDesTD = document.createElement("td");
+            let pTagTD = document.createElement("td");
 
-                pNameTD.innerHTML = result.project.projectNameData;
-                pDesTD.innerHTML = result.project.projectDescription;
-                pTagTD.innerHTML = result.project.tags;
+            pNameTD.innerHTML = result.project.projectNameData;
+            pDesTD.innerHTML = result.project.projectDescription;
+            pTagTD.innerHTML = result.project.tags;
 
-                dataRowProject.appendChild(pNameTD);
-                dataRowProject.appendChild(pDesTD);
-                dataRowProject.appendChild(pTagTD);
+            dataRowProject.appendChild(pNameTD);
+            dataRowProject.appendChild(pDesTD);
+            dataRowProject.appendChild(pTagTD);
 
-                selectedElementsDivProject.appendChild(dataRowProject);
-            }
+            selectedElementsDivProject.appendChild(dataRowProject);
         });
     }
     else if (noResultsFound) {

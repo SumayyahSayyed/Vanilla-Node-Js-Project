@@ -11,13 +11,18 @@
 
 <body>
     <nav>
-        <ul>
-            <li><a href="#" id="usersTab" class="usersTab">Users</a></li>
-            <li><a href="#" id="projectsTab" class="projectsTab">Projects</a></li>
-            <li class="search-bar">
-                <input type="text" name="search" id="search">
-                <img src="../assets/editable-icon/cross.png" id="cross-search" alt="">
-            </li>
+        <ul class="nav-ul">
+            <div>
+                <li><a href="#" id="logout" class="usersTab">LogOut</a></li>
+            </div>
+            <div>
+                <li><a href="#" id="usersTab" class="usersTab">Users</a></li>
+                <li><a href="#" id="projectsTab" class="projectsTab">Projects</a></li>
+                <li class="search-bar">
+                    <input type="text" name="search" id="search">
+                    <img src="../assets/editable-icon/cross.png" id="cross-search" alt="">
+                </li>
+            </div>
         </ul>
     </nav>
     <main>
@@ -25,6 +30,7 @@
             <table id="searchContainer" class="none searchTable">
 
             </table>
+
             <h2 id="users-main-heading">Users</h2>
             <table id="usersTable" class="usersTable">
             </table>
@@ -39,24 +45,24 @@
                 <div class="row-1">
                     <div class="input-group">
                         <label class="label" for="firstname">First name</label>
-                        <input type="text" name="firstname" id="firstname">
+                        <input type="text" name="firstname" id="firstname" onfocus="removeErrorMessage()">
                     </div>
                     <div class="input-group">
                         <label class="label" for="lastname">Last name</label>
-                        <input type="text" name="lastname" id="lastname">
+                        <input type="text" name="lastname" id="lastname" onfocus="removeErrorMessage()">
                     </div>
                 </div>
                 <div class="input-group">
                     <label class="label" for="email">Email</label>
-                    <input type="email" name="email" id="email">
+                    <input type="email" name="email" id="email" onfocus="removeErrorMessage()">
                 </div>
                 <div class="input-group">
-                    <label class="label" for="password">Password</label>
-                    <input type="password" name="password" id="password">
+                    <label class="label" for="phone">Phone Number</label>
+                    <input type="tel" name="phone" id="phone" onfocus="removeErrorMessage()">
                 </div>
                 <div class="main-buttons">
-                    <button id="submit-button" class="btn">Update</button>
                     <button id="cancel-button" class="btn">Cancel</button>
+                    <button id="submit-button" class="btn">Update</button>
                 </div>
             </form>
         </div>

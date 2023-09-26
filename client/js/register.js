@@ -1,3 +1,41 @@
+let token = localStorage.getItem("Token");
+if (token) {
+    fetch("http://localhost:3000/checkUserType", {
+        method: "GET",
+        headers: {
+            "authorization": token
+        }
+    })
+        .then(res => {
+            return res.json();
+        })
+        .then(data => {
+            if (data.statusCode === "401") {
+                alert(data.message);
+            }
+            else if (data.statusCode === "200") {
+                if (data.data === "admin123@gmail.com") {
+                    window.location.href = "../html/admin.html";
+                }
+                else if (data.data !== "admin123@gmail.com") {
+                    window.location.href = "../html/portfolio.html";
+                }
+            }
+        })
+        .catch(err => {
+            console.log(err)
+        })
+}
+
+// function preventGoingBack() {
+//     window.history.forward();
+// }
+// setTimeout("preventGoingBack()", 0);
+// window.onunload = function () { null };
+
+
+
+
 let submit = document.getElementById("register-form");
 
 const generateId = () => Math.random().toString(36);
@@ -37,9 +75,16 @@ submit.addEventListener("submit", (e) => {
                 if (data.statusCode === "400") {
                     alert(data.message);
                 }
-                else if (data.statusCode === "200") {
+                else if (data.email === "admin123@gmail.com" && data.statusCode === "200") {
+                    console.log("admin console");
                     console.log(data.message);
-                    sessionStorage.setItem("Token", data.token);
+                    localStorage.setItem("Token", data.token);
+                    window.location.href = "../html/admin.html";
+                }
+                else if (data.email !== "admin123@gmail.com" && data.statusCode === "200") {
+                    console.log("user console");
+                    console.log(data.message);
+                    localStorage.setItem("Token", data.token);
                     window.location.href = "../html/social.html";
                 }
             })
@@ -134,16 +179,6 @@ function validateForm(fName, lName, phone, email, password) {
         select.parentElement.insertAdjacentElement('beforeend', errorLabel);
         return false;
 
-    }
-    else if (email && !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email) && !errorLabel) {
-        let select = document.querySelector('input[name="email"]');
-        errorLabel = document.createElement("label");
-        errorLabel.classList.add("error-message");
-        errorLabel.innerText = "Invalid email address";
-        errorLabel.style.color = "red";
-
-        select.parentElement.insertAdjacentElement('beforeend', errorLabel);
-        return false;
     }
     else if (password == "" && !errorLabel) {
         let select = document.querySelector('input[name="password"]');
