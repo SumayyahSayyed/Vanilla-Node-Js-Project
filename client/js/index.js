@@ -1,7 +1,7 @@
 let token = localStorage.getItem("Token");
 
 if (token) {
-    fetch("http://localhost:3000/checkUserType", {
+    fetch("http://localhost:3000/checkUserTypeOnUser", {
         method: "GET",
         headers: {
             "authorization": token

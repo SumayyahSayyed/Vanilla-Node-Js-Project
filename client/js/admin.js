@@ -2,7 +2,7 @@
 
 let token = localStorage.getItem("Token");
 if (token) {
-    fetch("http://localhost:3000/checkUserType", {
+    fetch("http://localhost:3000/checkUserTypeOnAdmin", {
         method: "GET",
         headers: {
             "authorization": token
@@ -20,14 +20,16 @@ if (token) {
                     window.location.href = "../html/admin.html";
                 }
                 else if (data.data !== "admin123@gmail.com") {
-                    window.location.href = "../html/portfolio.html";
+                    window.location.href = "/html/portfolio.html";
                 }
+
             }
         })
         .catch(err => {
             console.log(err)
         })
 }
+
 
 // Logout
 function preventGoingBack() {

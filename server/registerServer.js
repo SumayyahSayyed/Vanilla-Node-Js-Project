@@ -101,6 +101,12 @@ const server = http.createServer((req, res) => {
     else if (req.method === 'GET' && parsedUrl.pathname === '/checkUserType') {
         checkUserType(req, res);
     }
+    else if (req.method === 'GET' && parsedUrl.pathname === '/checkUserTypeOnAdmin') {
+        checkUserType(req, res);
+    }
+    else if (req.method === 'GET' && parsedUrl.pathname === '/checkUserTypeOnUser') {
+        checkUserType(req, res);
+    }
 });
 
 function SignUp(req, res) {

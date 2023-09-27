@@ -1,3 +1,4 @@
+
 let token = localStorage.getItem("Token");
 
 if (token) {
@@ -19,8 +20,9 @@ if (token) {
                     window.location.href = "../html/admin.html";
                 }
                 else if (data.data !== "admin123@gmail.com") {
-                    window.location.href = "../html/portfolio.html";
+                    window.location.href = "/html/portfolio.html";
                 }
+
             }
         })
         .catch(err => {
