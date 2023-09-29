@@ -12,8 +12,8 @@ const cors = require('cors');
 dotenv.config();
 
 const secretKey = process.env.JWT_SECRET_KEY;
-
 const PORT = process.env.PORT || 3000;
+
 
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -228,30 +228,28 @@ function socials(req, res) {
     });
     req.on('end', async () => {
         const { githubLink, linkedinLink, twitterlink } = JSON.parse(body);
-        const socialsData = { githubLink, linkedinLink, twitterlink };
-
-
+        let jsonData = [];
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                const socialsData = { userId, githubLink, linkedinLink, twitterlink };
+                let data = fs.readFileSync("../data/socials.json", "utf8");
+                jsonData = JSON.parse(data);
 
-                if (user) {
-                    user.socialLinks = socialsData;
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '400',
-                        message: 'User not found'
-                    }));
-                }
+                jsonData.push(socialsData);
+
+                fs.writeFileSync("../data/socials.json", JSON.stringify(jsonData, null, 2), "utf8");
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '200',
+                    message: 'Data received and saved successfully'
+                }));
+            }
+            else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '400',
+                    message: 'User not found'
+                }));
             }
         });
     })
@@ -260,13 +258,16 @@ function socials(req, res) {
 function appendSocials(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
+            let users = fs.readFileSync("../data/socials.json", "utf8");
             let allUsers = JSON.parse(users);
             let user = allUsers.find(user => user.userId === userId);
 
             if (user) {
-                let links = user.socialLinks;
-                // console.log("line 221 Editable:", editable)
+                let githubLink = user.githubLink;
+                let linkedinLink = user.linkedinLink;
+                let twitterlink = user.twitterlink;
+                let links = { githubLink, linkedinLink, twitterlink };
+
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '200',
@@ -292,30 +293,43 @@ function editableData(req, res) {
     });
     req.on('end', async () => {
         const { position, aboutMe } = JSON.parse(body);
-        const editable = { position, aboutMe };
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                const editableData = { userId, position, aboutMe };
+                let editable = fs.readFileSync("../data/editable.json", "utf8");
+                let data = JSON.parse(editable);
 
-                if (user) {
-                    user.editableData = editable;
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+                let findUserIndex = data.findIndex(user => user.userId === userId);
+                // console.log(findUserIndex);
+                if (findUserIndex !== -1) {
+                    data[findUserIndex] = editableData;
+                    fs.writeFileSync("../data/editable.json", JSON.stringify(data, null, 2), "utf8");
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         statusCode: '200',
                         message: 'Data received and saved successfully'
                     }));
-                } else {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                }
+                else {
+                    data.push(editableData);
+                    fs.writeFileSync("../data/editable.json", JSON.stringify(data, null, 2), "utf8");
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
-                        statusCode: '400',
-                        message: 'User not found'
+                        statusCode: '200',
+                        message: 'Data received and saved successfully'
                     }));
                 }
+
+            }
+            else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '400',
+                    message: 'User not found'
+                }));
             }
         });
     })
@@ -324,12 +338,15 @@ function editableData(req, res) {
 function getEditableData(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
+            let users = fs.readFileSync("../data/editable.json", "utf8");
             let allUsers = JSON.parse(users);
             let user = allUsers.find(user => user.userId === userId);
 
             if (user) {
-                let editable = user.editableData;
+                let position = user.position;
+                let aboutMe = user.aboutMe;
+
+                let editable = { position, aboutMe };
                 // console.log("line 221 Editable:", editable)
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
@@ -356,36 +373,59 @@ function saveProjects(req, res) {
     });
     req.on('end', async () => {
         const { projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
-        const projectInfo = { projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let projectId = 0;
+                let projectData = fs.readFileSync("../data/projects.json", "utf8");
+                let data = JSON.parse(projectData);
 
-                if (user) {
-
-                    if (!user.project) {
-                        user.project = [];
-                    }
-
-                    user.project.push(projectInfo);
-
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
-
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '400',
-                        message: 'User not found'
-                    }));
+                if (!data) {
+                    data = [];
                 }
+
+                let findUserIndex = data.findIndex(user => user.userId === userId);
+
+                if (findUserIndex !== -1) {
+                    if (!data[findUserIndex].Projects) {
+                        data[findUserIndex].Projects = [];
+                        projectId = findUserIndex;
+                        projectId++;
+                        const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+
+                        data[findUserIndex].Projects.push(projectInfo);
+                    }
+                    else if (data[findUserIndex].Projects) {
+                        projectId = data[findUserIndex].Projects.length;
+                        const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+                        projectId++;
+                        data[findUserIndex].Projects.push(projectInfo);
+                    }
+                } else {
+                    projectId = 0;
+                    const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+
+                    const newUser = {
+                        userId: userId,
+                        Projects: [projectInfo]
+                    };
+                    data.push(newUser);
+                    projectId++;
+                }
+
+                fs.writeFileSync("../data/projects.json", JSON.stringify(data, null, 2), "utf8");
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '200',
+                    message: 'Data received and saved successfully'
+                }));
+            } else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '400',
+                    message: 'User not found'
+                }));
             }
         });
     })
@@ -394,27 +434,43 @@ function saveProjects(req, res) {
 function getProjects(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let users = fs.readFileSync("../data/projects.json", "utf8");
+            let data = JSON.parse(users);
+            let projectArray = [];
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let projects = user.project;
-                // console.log("line 221 Editable:", editable)
+                let projectsArray = user.Projects;
+                projectsArray.forEach(project => {
+
+                    if (user.userId === userId) {
+                        let projectId = project.projectId;
+                        let projectNameData = project.projectNameData;
+                        let projectDescription = project.projectDescription;
+                        let tags = project.tags;
+                        let projectLiveLink = project.projectLiveLink;
+                        let projectRepo = project.projectRepo;
+                        let projectImg = project.projectImg;
+
+                        let projects = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+                        projectArray.push(projects);
+                    }
+                });
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '200',
                     message: 'Data received successfully',
-                    data: projects
+                    data: projectArray
                 }));
             }
-            else {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '400',
-                    message: 'User not found'
-                }));
-            }
+
+        }
+        else {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                statusCode: '400',
+                message: 'User not found'
+            }));
         }
     })
 }
@@ -425,33 +481,48 @@ function saveEditedProject(req, res) {
         body += chunk.toString();
     });
     req.on('end', async () => {
-        const { indexValue, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
-        const projectInfo = { projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+        const { indexValue, projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
+        // console.log("Index Value: ", indexValue);
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let users = fs.readFileSync("../data/projects.json", "utf8");
+                let data = JSON.parse(users);
+                const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
 
+                let user = data.find(user => user.userId === userId);
                 if (user) {
-                    let aimedProject = user.project[indexValue];
+                    let projectsArray = user.Projects;
+                    projectsArray.forEach((project, index) => {
 
-                    aimedProject.projectNameData = projectInfo.projectNameData;
-                    aimedProject.projectDescription = projectInfo.projectDescription;
-                    aimedProject.tags = projectInfo.tags;
-                    aimedProject.projectLiveLink = projectInfo.projectLiveLink;
-                    aimedProject.projectRepo = projectInfo.projectRepo;
-                    aimedProject.projectImg = projectInfo.projectImg;
+                        if (index === indexValue) {
+                            // let aimedProject = project[index];
 
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+                            let projectNameData = projectInfo.projectNameData;
+                            let projectDescription = projectInfo.projectDescription;
+                            let tags = projectInfo.tags;
+                            let projectLiveLink = projectInfo.projectLiveLink;
+                            let projectRepo = projectInfo.projectRepo;
+                            let projectImg = projectInfo.projectImg;
 
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
+                            project.projectNameData = projectNameData;
+                            project.projectDescription = projectDescription;
+                            project.tags = tags;
+                            project.projectLiveLink = projectLiveLink;
+                            project.projectRepo = projectRepo;
+                            project.projectImg = projectImg;
+
+                            fs.writeFileSync("../data/projects.json", JSON.stringify(data, null, 2), "utf8");
+
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '200',
+                                message: 'Data received and saved successfully'
+                            }));
+                        }
+                    })
+                }
+                else {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         statusCode: '400',
@@ -464,37 +535,39 @@ function saveEditedProject(req, res) {
 }
 
 function deleteProject(req, res) {
-    const index = parseInt(req.url.split('/').pop());
-    console.log("---------", index);
+    const id = parseInt(req.url.split('/').pop());
+    console.log("---------", id);
 
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let users = fs.readFileSync("../data/projects.json", "utf8");
+            let data = JSON.parse(users);
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let aimedProject = user.project;
-                aimedProject.splice(index, 1);
+                let projectsArray = user.Projects;
+                let findProjectIndex = projectsArray.findIndex(project => project.projectId === id);
+                // console.log(findProjectIndex);
+                if (findProjectIndex !== -1) {
+                    projectsArray.splice(findProjectIndex, 1);
+                    fs.writeFile("../data/projects.json", JSON.stringify(data, null, 2), (err) => {
+                        if (err) {
+                            console.error(err);
+                            res.writeHead(500);
+                            res.end("Internal Server Error");
+                            return;
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '200',
+                            message: 'DELETED'
+                        }));
 
-                fs.writeFile("../data/users.json", JSON.stringify(allUsers, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                        res.writeHead(500);
-                        res.end("Internal Server Error");
-                        return;
-                    }
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'DELETED'
-                    }));
-
-                });
+                    });
+                }
             }
         }
     });
-
 }
 
 function saveExp(req, res) {
@@ -504,35 +577,62 @@ function saveExp(req, res) {
     });
     req.on('end', async () => {
         const { position, company, duration, jobInfo } = JSON.parse(body);
-        const expInfo = { position, company, duration, jobInfo };
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let expId = 0;
+                let expData = fs.readFileSync("../data/experience.json", "utf8");
+                let data = JSON.parse(expData);
 
-                if (user) {
-                    if (!user.experience) {
-                        user.experience = [];
-                    }
-
-                    user.experience.push(expInfo);
-
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
-
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '400',
-                        message: 'User not found'
-                    }));
+                if (!data) {
+                    data = [];
                 }
+
+                let findUserIndex = data.findIndex(user => user.userId === userId);
+
+                if (findUserIndex !== -1) {
+                    if (!data[findUserIndex].Experiences) {
+                        data[findUserIndex].Experiences = [];
+                        expId = findUserIndex;
+                        expId++;
+
+                        const expInfo = { expId, position, company, duration, jobInfo };
+                        data[findUserIndex].Experiences.push(expInfo);
+                    }
+                    else if (data[findUserIndex].Experiences) {
+                        expId = data[findUserIndex].Experiences.length;
+                        const expInfo = { expId, position, company, duration, jobInfo };
+                        expId++;
+                        data[findUserIndex].Experiences.push(expInfo);
+                    }
+                }
+                else {
+                    expId = 0;
+                    const expInfo = { expId, position, company, duration, jobInfo };
+
+                    const newUser = {
+                        userId: userId,
+                        Experiences: [expInfo]
+                    };
+                    data.push(newUser);
+                    expId++;
+                }
+
+
+                fs.writeFileSync("../data/experience.json", JSON.stringify(data, null, 2), "utf8");
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '200',
+                    message: 'Data received and saved successfully'
+                }));
+            }
+            else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '400',
+                    message: 'User not found'
+                }));
             }
         })
     })
@@ -541,19 +641,31 @@ function saveExp(req, res) {
 function getExp(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let expData = fs.readFileSync("../data/experience.json", "utf8");
+            let data = JSON.parse(expData);
+            let expArray = [];
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let experiences = user.experience;
-                // console.log("experiences: ---", experiences);
-                // console.log("line 221 Editable:", editable)
+                let expsArray = user.Experiences;
+                expsArray.forEach(exp => {
+                    if (user.userId === userId) {
+                        let expId = exp.expId;
+                        let position = exp.position;
+                        let company = exp.company;
+                        let duration = exp.duration;
+                        let jobInfo = exp.jobInfo;
+
+                        let experiences = { expId, position, company, duration, jobInfo };
+                        expArray.push(experiences);
+                    }
+                });
+
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '200',
                     message: 'Data received successfully',
-                    data: experiences
+                    data: expArray
                 }));
             }
             else {
@@ -574,33 +686,42 @@ function saveEditedExp(req, res) {
     });
     req.on('end', async () => {
         const { indexValue, position, company, duration, jobInfo } = JSON.parse(body);
-        const projectInfo = { position, company, duration, jobInfo };
 
         // console.log("Exp Info ----", projectInfo);
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let users = fs.readFileSync("../data/experience.json", "utf8");
+                let data = JSON.parse(users);
+                const expInfo = { position, company, duration, jobInfo };
 
+                let user = data.find(user => user.userId === userId);
                 if (user) {
-                    // console.log("Index: ", indexValue);
-                    let aimedProject = user.experience[indexValue];
-                    // console.log(aimedProject);
+                    let expsArray = user.Experiences;
+                    expsArray.forEach((exp, index) => {
 
-                    aimedProject.position = projectInfo.position;
-                    aimedProject.company = projectInfo.company;
-                    aimedProject.duration = projectInfo.duration;
-                    aimedProject.jobInfo = projectInfo.jobInfo;
+                        if (index === indexValue) {
 
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+                            let position = expInfo.position;
+                            let company = expInfo.company;
+                            let duration = expInfo.duration;
+                            let jobInfo = expInfo.jobInfo;
 
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
+                            exp.position = position;
+                            exp.company = company;
+                            exp.duration = duration;
+                            exp.jobInfo = jobInfo;
+
+                            fs.writeFileSync("../data/experience.json", JSON.stringify(data, null, 2), "utf8");
+
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '200',
+                                message: 'Data received and saved successfully'
+                            }));
+                        }
+                    });
+                }
+                else {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         statusCode: '400',
@@ -613,31 +734,34 @@ function saveEditedExp(req, res) {
 }
 
 function deleteExp(req, res) {
-    const index = parseInt(req.url.split('/').pop());
-    console.log("---------", index);
+    const id = parseInt(req.url.split('/').pop());
+    console.log("---------", id);
 
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let expData = fs.readFileSync("../data/experience.json", "utf8");
+            let data = JSON.parse(expData);
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let aimedExp = user.experience;
-                console.log("Aimed Exp: ", aimedExp);
-                aimedExp.splice(index, 1);
-
-                fs.writeFile("../data/users.json", JSON.stringify(allUsers, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                        res.writeHead(500);
-                        res.end("Internal Server Error");
-                        return;
-                    }
-
-                    res.writeHead(204);
-                    res.end();
-                });
+                let expArray = user.Experiences;
+                let findExpIndex = expArray.findIndex(exp => exp.expId === id);
+                if (findExpIndex !== -1) {
+                    expArray.splice(findExpIndex, 1);
+                    fs.writeFile("../data/experience.json", JSON.stringify(data, null, 2), (err) => {
+                        if (err) {
+                            console.error(err);
+                            res.writeHead(500);
+                            res.end("Internal Server Error");
+                            return;
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '200',
+                            message: 'DELETED'
+                        }));
+                    });
+                }
             }
         }
     });
@@ -650,35 +774,60 @@ function saveEdu(req, res) {
     });
     req.on('end', async () => {
         const { degree, university, cgpa, duration } = JSON.parse(body);
-        const eduInfo = { degree, university, cgpa, duration };
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let eduId = 0;
+                let eduData = fs.readFileSync("../data/education.json", "utf8");
+                let data = JSON.parse(eduData);
 
-                if (user) {
-                    if (!user.education) {
-                        user.education = [];
-                    }
-
-                    user.education.push(eduInfo);
-
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
-
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                } else {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '400',
-                        message: 'User not found'
-                    }));
+                if (!data) {
+                    data = [];
                 }
+
+                let findUserIndex = data.findIndex(user => user.userId === userId);
+
+                if (findUserIndex !== -1) {
+                    if (!data[findUserIndex].Educations) {
+                        data[findUserIndex].Educations = [];
+                        eduId = findUserIndex;
+                        eduId++;
+
+                        const eduInfo = { eduId, degree, university, cgpa, duration };
+                        data[findUserIndex].Educations.push(eduInfo);
+                    }
+                    else if (data[findUserIndex].Educations) {
+                        eduId = data[findUserIndex].Educations.length;
+                        const eduInfo = { eduId, degree, university, cgpa, duration };
+                        eduId++;
+                        data[findUserIndex].Educations.push(eduInfo);
+                    }
+                }
+                else {
+                    eduId = 0;
+                    const eduInfo = { eduId, degree, university, cgpa, duration };
+                    const newUser = {
+                        userId: userId,
+                        Educations: [eduInfo]
+                    }
+                    data.push(newUser);
+                    eduId++;
+                }
+
+                fs.writeFileSync("../data/education.json", JSON.stringify(data, null, 2), "utf8");
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '200',
+                    message: 'Data received and saved successfully'
+                }));
+            }
+            else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '400',
+                    message: 'User not found'
+                }));
             }
         })
     })
@@ -687,17 +836,31 @@ function saveEdu(req, res) {
 function getEdu(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let eduData = fs.readFileSync("../data/education.json", "utf8");
+            let data = JSON.parse(eduData);
+            let eduArray = [];
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let educations = user.education;
+                let edusArray = user.Educations;
+                edusArray.forEach(edu => {
+                    if (user.userId === userId) {
+
+                        let eduId = edu.eduId;
+                        let degree = edu.degree;
+                        let university = edu.university;
+                        let cgpa = edu.cgpa;
+                        let duration = edu.duration;
+
+                        let educations = { eduId, degree, university, cgpa, duration };
+                        eduArray.push(educations);
+                    }
+                });
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '200',
                     message: 'Data received successfully',
-                    data: educations
+                    data: eduArray
                 }));
             }
             else {
@@ -717,32 +880,41 @@ function saveEditedEdu(req, res) {
         body += chunk.toString();
     });
     req.on('end', async () => {
-        const { index, degree, university, cgpa, duration } = JSON.parse(body);
-        const eduInfo = { degree, university, cgpa, duration };
+        const { indexValue, degree, university, cgpa, duration } = JSON.parse(body);
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
-                let user = allUsers.find(user => user.userId === userId);
+                let eduData = fs.readFileSync("../data/education.json", "utf8");
+                let data = JSON.parse(eduData);
+                const eduInfo = { degree, university, cgpa, duration };
+
+                let user = data.find(user => user.userId === userId);
 
                 if (user) {
-                    // console.log("Index: ", indexValue);
-                    let aimedEdu = user.education[index];
-                    console.log(aimedEdu);
+                    let edusArray = user.Educations;
+                    edusArray.forEach((edu, index) => {
+                        if (index === indexValue) {
 
-                    aimedEdu.degree = eduInfo.degree;
-                    aimedEdu.university = eduInfo.university;
-                    aimedEdu.cgpa = eduInfo.cgpa;
-                    aimedEdu.duration = eduInfo.duration;
+                            let degree = eduInfo.degree;
+                            let university = eduInfo.university;
+                            let cgpa = eduInfo.cgpa;
+                            let duration = eduInfo.duration;
 
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+                            edu.degree = degree;
+                            edu.university = university;
+                            edu.cgpa = cgpa;
+                            edu.duration = duration;
 
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
+                            fs.writeFileSync("../data/education.json", JSON.stringify(data, null, 2), "utf8");
+
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '200',
+                                message: 'Data received and saved successfully'
+                            }));
+                        }
+                    });
+
                 } else {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
@@ -756,63 +928,68 @@ function saveEditedEdu(req, res) {
 }
 
 function deleteEdu(req, res) {
-    const index = parseInt(req.url.split('/').pop());
-    console.log("---------", index);
+    const id = parseInt(req.url.split('/').pop());
+    console.log("---------", id);
 
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
-            let user = allUsers.find(user => user.userId === userId);
+            let eduData = fs.readFileSync("../data/education.json", "utf8");
+            let data = JSON.parse(eduData);
+            let user = data.find(user => user.userId === userId);
 
             if (user) {
-                let aimedEdu = user.education;
-                console.log("Aimed Edu: ", aimedEdu);
-                aimedEdu.splice(index, 1);
+                let eduArray = user.Educations;
+                let findEduIndex = eduArray.findIndex(edu => edu.eduId === id);
+                if (findEduIndex !== -1) {
+                    eduArray.splice(findEduIndex, 1);
 
-                fs.writeFile("../data/users.json", JSON.stringify(allUsers, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                        res.writeHead(500);
-                        res.end("Internal Server Error");
-                        return;
-                    }
-
-                    res.writeHead(204);
-                    res.end();
-                });
+                    fs.writeFile("../data/education.json", JSON.stringify(data, null, 2), (err) => {
+                        if (err) {
+                            console.error(err);
+                            res.writeHead(500);
+                            res.end("Internal Server Error");
+                            return;
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '200',
+                            message: 'DELETED'
+                        }));
+                    });
+                }
             }
         }
     });
 }
 
+/*--------------------------ADMIN --------------------------*/
 function getDataForAdmin(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
             try {
                 const usersData = JSON.parse(fs.readFileSync("../data/users.json", "utf8"));
+                const projectsData = JSON.parse(fs.readFileSync("../data/projects.json", "utf8"));
 
-                // Collect user data in an array
                 const userDataArray = [];
 
                 for (let eachUserData of usersData) {
                     let userCredentials = {
+                        userId: eachUserData.userId,
                         firstName: eachUserData.firstName,
                         lastName: eachUserData.lastName,
                         userPhone: eachUserData.userPhone,
-                        userEmail: eachUserData.userEmail,
-                        projects: eachUserData.project
+                        userEmail: eachUserData.userEmail
                     };
 
                     userDataArray.push(userCredentials);
                 }
 
-                // Send a single response with all user data
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '200',
                     message: 'Data received successfully',
-                    userData: userDataArray
+                    userData: userDataArray,
+                    projects: projectsData
                 }));
             } catch (error) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -832,27 +1009,102 @@ function getDataForAdmin(req, res) {
 }
 
 function deleteUser(req, res) {
-    const index = parseInt(req.url.split('/').pop());
-    console.log("---------", index);
+    const id = req.url.split('/').pop();
+    console.log("1013---------", id);
 
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let allUsers = JSON.parse(users);
 
-            if (index >= 0 && index < allUsers.length) {
-                allUsers.splice(index, 1);
+            console.log(id);
+            let users = fs.readFileSync("../data/users.json", "utf8");
+            let projects = fs.readFileSync("../data/projects.json", "utf8");
+            let experiences = fs.readFileSync("../data/experience.json", "utf8");
+            let educations = fs.readFileSync("../data/education.json", "utf8");
+            let editables = fs.readFileSync("../data/editable.json", "utf8");
+            let socials = fs.readFileSync("../data/socials.json", "utf8");
+            let tokens = fs.readFileSync("../data/tokens.json", "utf8");
+
+            let allUsers = JSON.parse(users);
+            let allProjects = JSON.parse(projects);
+            let allExperience = JSON.parse(experiences);
+            let allEducations = JSON.parse(educations);
+            let allEditables = JSON.parse(editables);
+            let allSocials = JSON.parse(socials);
+            let allTokens = JSON.parse(tokens);
+
+            let findUserIndex = allUsers.findIndex(user => user.userId === id);
+            let findProjectIndex = allProjects.findIndex(user => user.userId === id);
+            let findExpIndex = allExperience.findIndex(user => user.userId === id);
+            let findEduIndex = allEducations.findIndex(user => user.userId === id);
+            let findEditableIndex = allEditables.findIndex(user => user.userId === id);
+            let findSocialsIndex = allSocials.findIndex(user => user.userId === id);
+
+            allTokens.forEach((token, index) => {
+                if (token.userId === id) {
+                    allTokens.splice(index, 1);
+                    fs.writeFile("../data/tokens.json", JSON.stringify(allTokens, null, 2), (err) => {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log("Tokens removed successfully.");
+                        }
+                    });
+                }
+            });
+
+
+            if (findUserIndex !== -1 || findProjectIndex !== -1 || findExpIndex !== -1 ||
+                findEduIndex !== -1 || findEditableIndex !== -1 || findSocialsIndex !== -1) {
+
+                allUsers.splice(findUserIndex, 1);
+                allProjects.splice(findProjectIndex, 1);
+                allExperience.splice(findExpIndex, 1);
+                allEducations.splice(findEduIndex, 1);
+                allEditables.splice(findEditableIndex, 1);
+                allSocials.splice(findSocialsIndex, 1);
 
                 fs.writeFile("../data/users.json", JSON.stringify(allUsers, null, 2), (err) => {
                     if (err) {
                         console.error(err);
-                        res.writeHead(500);
-                        res.end("Internal Server Error");
-                        return;
+                    } else {
+                        console.log("File written successfully.");
                     }
+                });
 
-                    res.writeHead(204);
-                    res.end();
+                fs.writeFile("../data/projects.json", JSON.stringify(allProjects, null, 2), (err) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("File written successfully.");
+                    }
+                });
+                fs.writeFile("../data/experience.json", JSON.stringify(allExperience, null, 2), (err) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("File written successfully.");
+                    }
+                });
+                fs.writeFile("../data/education.json", JSON.stringify(allEducations, null, 2), (err) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("File written successfully.");
+                    }
+                });
+                fs.writeFile("../data/editable.json", JSON.stringify(allEditables, null, 2), (err) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("File written successfully.");
+                    }
+                });
+                fs.writeFile("../data/socials.json", JSON.stringify(allSocials, null, 2), (err) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log("File written successfully.");
+                    }
                 });
             }
         }
@@ -861,8 +1113,8 @@ function deleteUser(req, res) {
 
 function updateUser(req, res) {
     let body = "";
-    const index = parseInt(req.url.split('/').pop());
-    // console.log("Update User Index---------", index);
+    const id = req.url.split('/').pop();
+    console.log("Update User Id ---------", id);
 
     req.on('data', (chunk) => {
         body += chunk.toString();
@@ -876,20 +1128,25 @@ function updateUser(req, res) {
                 let users = fs.readFileSync("../data/users.json", "utf8");
                 let allUsers = JSON.parse(users);
 
-                const user = allUsers[index]
-                console.log("Found the user: ", user);
-                user.firstName = userInfo.firstName;
-                user.lastName = userInfo.lastName;
-                user.userEmail = userInfo.userEmail;
-                user.userPhone = userInfo.userPhone;
+                let findUser = allUsers.find(user => user.userId === id);
+                if (findUser) {
 
-                fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+                    // const user = allUsers[index]
+                    // console.log("Found the user: ", user);
+                    findUser.firstName = userInfo.firstName;
+                    findUser.lastName = userInfo.lastName;
+                    findUser.userEmail = userInfo.userEmail;
+                    findUser.userPhone = userInfo.userPhone;
 
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '200',
-                    message: 'Data received and saved successfully'
-                }));
+                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        statusCode: '200',
+                        message: 'Data received and saved successfully'
+                    }));
+                }
+
             }
         });
     })
@@ -1009,7 +1266,6 @@ function deleteToken(req, res) {
             }
         }
     });
-    // })
 }
 
 function checkUserType(req, res) {
@@ -1039,13 +1295,14 @@ function checkUserType(req, res) {
     })
 }
 
+/*------------------------------------ TOKEN Generation ------------------------------------*/
 
 function createJWTtoken(user) {
     let payload = {
         userEmail: user.userEmail,
         userId: user.userId
     }
-    let token = jwt.sign(payload, secretKey, { expiresIn: "5m" });
+    let token = jwt.sign(payload, secretKey, { expiresIn: "24h" });
     return token;
 }
 
@@ -1054,7 +1311,7 @@ function createJWTtokenLogin(user) {
         userEmail: user.verifyEmail,
         userId: user.id
     }
-    let token = jwt.sign(payload, secretKey, { expiresIn: "5m" });
+    let token = jwt.sign(payload, secretKey, { expiresIn: "24h" });
     return token;
 }
 
@@ -1079,7 +1336,6 @@ function getAndVerifyToken(req, res, callback) {
             }
             else {
                 let userId = decoded.userId;
-                // Call the callback function with the userId
                 callback(userId);
             }
         });

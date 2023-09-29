@@ -1,34 +1,32 @@
-
-
 let token = localStorage.getItem("Token");
-if (token) {
-    fetch("http://localhost:3000/checkUserTypeOnAdmin", {
-        method: "GET",
-        headers: {
-            "authorization": token
-        }
-    })
-        .then(res => {
-            return res.json();
-        })
-        .then(data => {
-            if (data.statusCode === "401") {
-                alert(data.message);
-            }
-            else if (data.statusCode === "200") {
-                if (data.data === "admin123@gmail.com") {
-                    window.location.href = "../html/admin.html";
-                }
-                else if (data.data !== "admin123@gmail.com") {
-                    window.location.href = "/html/portfolio.html";
-                }
+// if (token) {
+//     fetch("http://localhost:3000/checkUserTypeOnAdmin", {
+//         method: "GET",
+//         headers: {
+//             "authorization": token
+//         }
+//     })
+//         .then(res => {
+//             return res.json();
+//         })
+//         .then(data => {
+//             if (data.statusCode === "401") {
+//                 alert(data.message);
+//             }
+//             else if (data.statusCode === "200") {
+//                 if (data.data === "admin123@gmail.com") {
+//                     window.location.href = "../html/admin.html";
+//                 }
+//                 else if (data.data !== "admin123@gmail.com") {
+//                     window.location.href = "/html/portfolio.html";
+//                 }
 
-            }
-        })
-        .catch(err => {
-            console.log(err)
-        })
-}
+//             }
+//         })
+//         .catch(err => {
+//             console.log(err)
+//         })
+// }
 
 
 // Logout
@@ -91,19 +89,20 @@ function getUsers() {
         .then(data => {
             console.log(data);
             getUserData = data.userData;
+            let projects = data.projects;
+            // console.log(projects);
 
             appendUsers(getUserData);
             searchUser(getUserData);
-            searchProject(getUserData);
+            searchProject(getUserData, projects);
 
+            appendProjects(getUserData, projects);
+            viewFullProject(projects);
 
             if (Array.isArray(getUserData)) {
                 getUserData.forEach((user, index) => {
-                    deleteUser(user, index);
-                    editUser(user, index);
-                    appendProjects(user, user.projects);
-                    viewFullProject(user.projects);
-                    // searchProject(user, user.projects);
+                    deleteUser(user);
+                    editUser(user);
                 })
             }
         })
@@ -194,7 +193,7 @@ function appendUsers(getUserData) {
     }
 }
 
-function deleteUser(user, index) {
+function deleteUser(user) {
     let deleteUser = document.querySelectorAll(".delete-icon");
     for (eachDeleteButton of deleteUser) {
         eachDeleteButton.addEventListener("click", (e) => {
@@ -203,8 +202,8 @@ function deleteUser(user, index) {
             let emailData = tableRow.querySelector(".email-data");
 
             if (user.userEmail === emailData.textContent) {
-
-                fetch(`http://localhost:3000/deleteUser/${index}`, {
+                let userId = user.userId;
+                fetch(`http://localhost:3000/deleteUser/${userId}`, {
                     method: "DELETE",
                     headers: {
                         "Content-type": "application/json",
@@ -230,7 +229,7 @@ function deleteUser(user, index) {
 let addUser = document.getElementById("register-form");
 let addNewUser = document.getElementById("addNewUser");
 
-function editUser(user, index) {
+function editUser(user) {
     let editUserBtn = document.querySelectorAll(".edit-icon");
     let submitButton = document.getElementById("submit-button");
 
@@ -240,7 +239,7 @@ function editUser(user, index) {
             addUser.classList.remove("hide");
             usersTable.classList.add("hide");
             usersMainHeading.classList.add("hide");
-            addNewUser.classList.add("hide");
+            // addNewUser.classList.add("hide");
             document.body.style.backgroundColor = "rgba(173, 173, 173, 0.171)";
 
             let emailData = tableRow.querySelector(".email-data");
@@ -273,7 +272,7 @@ function editUser(user, index) {
                         addUser.classList.add("hide");
                         usersTable.classList.remove("hide");
                         usersMainHeading.classList.remove("hide");
-                        addNewUser.classList.remove("hide");
+                        // addNewUser.classList.remove("hide");
 
                         emailData.textContent = user.userEmail;
                         nameData.textContent = user.firstName + " " + user.lastName;
@@ -287,7 +286,9 @@ function editUser(user, index) {
                             userPhone: user.userPhone
                         };
 
-                        fetch(`http://localhost:3000/updateUser/${index}`, {
+                        let userId = user.userId;
+                        console.log(userId);
+                        fetch(`http://localhost:3000/updateUser/${userId}`, {
                             method: "POST",
                             headers: {
                                 "Content-type": "application/json",
@@ -308,9 +309,7 @@ function editUser(user, index) {
                     else {
                         isTrue = validateForm(fname, lname, phone, email);
                     }
-
                 });
-
             }
         })
     }
@@ -321,12 +320,13 @@ cancelButton.addEventListener("click", () => {
     addUser.classList.add("hide");
     usersTable.classList.remove("hide");
     usersMainHeading.classList.remove("hide");
-    addNewUser.classList.remove("hide");
+    // addNewUser.classList.remove("hide");
 })
 
 
 let searchContainer = document.getElementById("searchContainer");
 function searchUser(credentials) {
+    // console.log(credentials);
     let searchBar = document.getElementById("search");
     let noResultsFound = true;
 
@@ -341,7 +341,7 @@ function searchUser(credentials) {
         usersMainHeading.classList.add("hide");
         usersTable.classList.add("hide");
         usersTable.style.display = "none";
-        addNewUser.classList.add("hide");
+        // addNewUser.classList.add("hide");
 
         credentials.forEach((userData) => {
             // console.log(userData);
@@ -356,7 +356,7 @@ function searchUser(credentials) {
                 };
 
                 searchResults.push(combinedRow);
-                console.log(searchResults);
+                // console.log(searchResults);
                 noResultsFound = false;
             }
         });
@@ -412,7 +412,7 @@ crossSearch.addEventListener("click", () => {
     usersMainHeading.classList.remove("hide");
     usersTable.classList.remove("hide");
     usersTable.style.display = "block";
-    addNewUser.classList.remove("hide");
+    // addNewUser.classList.remove("hide");
     searchContainerProjects.classList.add("none");
     projectsTable.classList.remove("hide");
     projectsTable.style.display = "block";
@@ -426,13 +426,13 @@ document.addEventListener("click", (e) => {
         searchContainer.classList.add("none");
         usersMainHeading.classList.remove("hide");
         usersTable.classList.remove("hide");
-        addNewUser.classList.remove("hide");
+        // addNewUser.classList.remove("hide");
         searchBar.value = "";
     }
 })
 
 
-// Projects
+/*------------------------------------------- Projects -------------------------------------------*/
 
 
 let projectsTab = document.getElementById("projectsTab");
@@ -447,7 +447,7 @@ projectsTab.addEventListener("click", () => {
 })
 
 let projectView = document.getElementById("mainDiv");
-function viewFullProject(getUserProject) {
+function viewFullProject(allProjects) {
     let view = document.querySelectorAll(".view-icon");
 
     for (let viewProjectIcon of view) {
@@ -455,24 +455,24 @@ function viewFullProject(getUserProject) {
 
             projectView.classList.remove("hide");
             document.body.style.backgroundColor = "rgba(173, 173, 173, 0.171)";
-
             let listContent = e.target.closest('li').textContent;
 
-            for (let eachproject of getUserProject) {
+            for (let eachUsersproject of allProjects) {
+                for (let eachProject of eachUsersproject.Projects) {
+                    if (eachProject.projectNameData === listContent) {
+                        let projectImage = document.getElementById("projectImage");
+                        let projectHeading = document.getElementById("projectHeading");
+                        let pDescription = document.getElementById("projectDescription");
+                        let seeLive = document.getElementById("seeLive");
+                        let repoLink = document.getElementById("repoLink");
 
-                if (eachproject.projectNameData === listContent) {
-                    let projectImage = document.getElementById("projectImage");
-                    let projectHeading = document.getElementById("projectHeading");
-                    let pDescription = document.getElementById("projectDescription");
-                    let seeLive = document.getElementById("seeLive");
-                    let repoLink = document.getElementById("repoLink");
 
-
-                    projectImage.setAttribute('src', eachproject.projectImg);
-                    projectHeading.innerHTML = eachproject.projectNameData;
-                    pDescription.innerHTML = eachproject.projectDescription;
-                    seeLive.setAttribute('href', eachproject.projectLiveLink);
-                    repoLink.setAttribute('href', eachproject.projectRepo);
+                        projectImage.setAttribute('src', eachProject.projectImg);
+                        projectHeading.innerHTML = eachProject.projectNameData;
+                        pDescription.innerHTML = eachProject.projectDescription;
+                        seeLive.setAttribute('href', eachProject.projectLiveLink);
+                        repoLink.setAttribute('href', eachProject.projectRepo);
+                    }
                 }
             }
         });
@@ -481,7 +481,8 @@ function viewFullProject(getUserProject) {
 
 let searchContainerProjects = document.getElementById("searchContainerProjects");
 
-function searchProject(users) {
+function searchProject(getUserData, allProjects) {
+    console.log(allProjects);
     let projectsTable = document.getElementById("projectsTable");
     let searchBar = document.getElementById("search");
     let searchContainerProjects = document.getElementById("searchContainerProjects");
@@ -498,22 +499,29 @@ function searchProject(users) {
         projectsTable.classList.add("hide");
         projectsTable.style.display = "none";
 
-        users.forEach(user => {
-            let projects = user.projects;
+        allProjects.forEach(project => {
+            let eachUserProjects = project.Projects;
+            // console.log(project);
 
-            if (Array.isArray(projects)) {
-                projects.forEach((projectData) => {
+            if (Array.isArray(eachUserProjects)) {
+                // console.log(eachUserProjects);
+                eachUserProjects.forEach((projectData) => {
+                    // console.log(projectData)
                     if (
                         projectData.projectNameData.toLowerCase().includes(inputData) ||
                         projectData.projectDescription.toLowerCase().includes(inputData)
                     ) {
 
+                        let userID = project.userId;
+                        // console.log(userID);
+                        let findUser = getUserData.find(user => user.userId === userID);
+
                         let combinedRow = {
-                            email: user.userEmail,
+                            email: findUser.userEmail,
                             project: projectData
                         };
 
-                        console.log("Combined ROW: ", combinedRow);
+                        // console.log("Combined ROW: ", combinedRow);
                         searchResults.push(combinedRow);
                         noResultsFound = false;
                     }
@@ -524,6 +532,7 @@ function searchProject(users) {
         let tableRow = document.createElement("tr");
         let userEmail = document.createElement("th");
         let userProjects = document.createElement("th");
+
 
         tableRow.classList.add("main-row");
 
@@ -537,33 +546,49 @@ function searchProject(users) {
 
         if (searchResults.length > 0) {
             searchResults.forEach((result) => {
-                console.log("RESULT", result);
-                let dataRow = document.createElement("tr");
-                dataRow.classList.add("table-row");
+                if (result.email !== "admin1232gmail.com") {
 
-                let emailData = document.createElement("td");
-                let projectData = document.createElement("td");
+                    // console.log("RESULT", result);
+                    let dataRow = document.createElement("tr");
+                    dataRow.classList.add("table-row");
 
-                emailData.innerHTML = result.email; // Make sure to use the current user's email
-                projectData.innerHTML = result.project.projectNameData;
+                    let emailData = document.createElement("td");
+                    let projectData = document.createElement("td");
+                    let projectspan = document.createElement("span");
+                    let viewIconDiv = document.createElement("div");
+                    let viewIcon = document.createElement("img");
+                    viewIcon.classList.add("view-icon");
 
-                dataRow.appendChild(emailData);
-                dataRow.appendChild(projectData);
-                searchContainerProjects.appendChild(dataRow);
+                    emailData.innerHTML = result.email;
+                    projectspan.innerHTML = result.project.projectNameData;
+                    viewIcon.setAttribute("src", "../assets/editable-icon/eye.png");
+                    projectData.classList.add("projectElement");
+                    viewIconDiv.classList.add("view-icon-div");
+
+                    viewIconDiv.appendChild(viewIcon);
+                    dataRow.appendChild(emailData);
+                    projectData.appendChild(projectspan);
+                    projectData.appendChild(viewIconDiv);
+                    dataRow.appendChild(projectData);
+                    searchContainerProjects.appendChild(dataRow);
+
+                }
             });
+            viewFullProject(allProjects);
         } else if (noResultsFound) {
             let noResultsItem = document.createElement("li");
             noResultsItem.textContent = "No results found.";
             searchContainerProjects.appendChild(noResultsItem);
         }
     });
+
 }
 
 let crossViewProject = document.getElementById("cross-view-project");
 crossViewProject.addEventListener("click", () => {
     projectView.classList.add("hide");
     usersTable.style.display = "block";
-    addNewUser.classList.remove("hide");
+    // addNewUser.classList.remove("hide");
     document.body.style.backgroundColor = "white";
 })
 
@@ -585,50 +610,52 @@ tableRowProjects.appendChild(userProjects);
 
 
 function appendProjects(user, projects) {
-    let dataRow = document.createElement("tr");
+    for (let eachUser of user) {
+        if (eachUser.userEmail !== "admin123@gmail.com") {
 
-    dataRow.classList.add("table-row");
 
-    let emailData = document.createElement("td");
-    let projectData = document.createElement("td");
+            let dataRow = document.createElement("tr");
+            dataRow.classList.add("table-row");
 
-    if (user.userEmail !== "admin123@gmail.com") {
+            let emailData = document.createElement("td");
+            let projectData = document.createElement("td");
 
-        emailData.innerHTML = user.userEmail;
-        dataRow.appendChild(emailData);
+            emailData.innerHTML = eachUser.userEmail;
+            dataRow.appendChild(emailData);
 
-        for (let eachproject of projects) {
+            for (let eachUsersproject of projects) {
+                if (eachUser.userId === eachUsersproject.userId) {
+                    for (let eachProject of eachUsersproject.Projects) {
 
-            let projectsList = document.createElement("ul");
-            let listData = document.createElement("li");
+                        let projectsList = document.createElement("ul");
+                        let listData = document.createElement("li");
 
-            projectData.classList.add("project-data");
-            projectsList.classList.add("project-ul");
-            listData.classList.add("project-li");
+                        projectData.classList.add("project-data");
+                        projectsList.classList.add("project-ul");
+                        listData.classList.add("project-li");
 
-            listData.innerHTML = eachproject.projectNameData;
+                        listData.innerHTML = eachProject.projectNameData;
 
-            let viewIconDiv = document.createElement("div");
-            let viewIcon = document.createElement("img");
+                        let viewIconDiv = document.createElement("div");
+                        let viewIcon = document.createElement("img");
 
-            viewIcon.setAttribute("src", "../assets/editable-icon/eye.png");
-            viewIconDiv.classList.add("view-icon-div")
-            viewIcon.classList.add("view-icon");
+                        viewIcon.setAttribute("src", "../assets/editable-icon/eye.png");
+                        viewIconDiv.classList.add("view-icon-div")
+                        viewIcon.classList.add("view-icon");
 
-            projectData.appendChild(projectsList);
+                        projectData.appendChild(projectsList);
 
-            viewIconDiv.appendChild(viewIcon);
-            listData.appendChild(viewIconDiv);
-            projectsList.appendChild(listData);
-            dataRow.appendChild(projectData);
-
+                        viewIconDiv.appendChild(viewIcon);
+                        listData.appendChild(viewIconDiv);
+                        projectsList.appendChild(listData);
+                        dataRow.appendChild(projectData);
+                    }
+                }
+            }
+            projectsTable.appendChild(dataRow);
         }
-
-        projectsTable.appendChild(dataRow);
     }
 }
-
-
 
 // Validation
 

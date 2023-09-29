@@ -1,32 +1,32 @@
 let token = localStorage.getItem("Token");
 
-if (token) {
-    fetch("http://localhost:3000/checkUserTypeOnUser", {
-        method: "GET",
-        headers: {
-            "authorization": token
-        }
-    })
-        .then(res => {
-            return res.json();
-        })
-        .then(data => {
-            if (data.statusCode === "401") {
-                alert(data.message);
-            }
-            else if (data.statusCode === "200") {
-                if (data.data === "admin123@gmail.com") {
-                    window.location.href = "../html/admin.html";
-                }
-                else if (data.data !== "admin123@gmail.com") {
-                    window.location.href = "../html/portfolio.html";
-                }
-            }
-        })
-        .catch(err => {
-            console.log(err)
-        })
-}
+// if (token) {
+//     fetch("http://localhost:3000/checkUserTypeOnUser", {
+//         method: "GET",
+//         headers: {
+//             "authorization": token
+//         }
+//     })
+//         .then(res => {
+//             return res.json();
+//         })
+//         .then(data => {
+//             if (data.statusCode === "401") {
+//                 alert(data.message);
+//             }
+//             else if (data.statusCode === "200") {
+//                 if (data.data === "admin123@gmail.com") {
+//                     window.location.href = "../html/admin.html";
+//                 }
+//                 else if (data.data !== "admin123@gmail.com") {
+//                     window.location.href = "../html/portfolio.html";
+//                 }
+//             }
+//         })
+//         .catch(err => {
+//             console.log(err)
+//         })
+// }
 
 
 function preventGoingBack() {
@@ -46,7 +46,6 @@ let getEduData = null;
 /* ------------------------------- Fetch Token --------------------------------------*/
 /* ----------------------------------------------------------------------------------*/
 
-// let token = localStorage.getItem("Token"); 
 
 fetch("http://localhost:3000/profile", {
     method: "GET",
@@ -139,9 +138,10 @@ let projectForm = document.getElementById("project-form");
 let projectDiv = document.getElementById("allProjects");
 let expDiv = document.getElementById("exp");
 
+// let projectIdCounter = 0;
+
 
 function handleFormSubmission(e) {
-
     e.preventDefault();
 
     let projectNameInput = document.getElementById("projectName").value;
@@ -151,12 +151,13 @@ function handleFormSubmission(e) {
     let repoLinkInput = document.getElementById("linkToRepo").value;
     let imageSRC = dataURL;
 
-    if (!projectNameInput || !projectDescriptionInput || langTags.length === 0 || !liveLinkInput || !repoLinkInput || !imageSRC) {
+    if (!projectNameInput || !projectDescriptionInput || !langTags || !liveLinkInput || !repoLinkInput || !imageSRC) {
         validateFormProject(projectNameInput, projectDescriptionInput, langTags, liveLinkInput, repoLinkInput, imageSRC);
     } else {
         projectForm.classList.add("hide");
 
         let projectData = {
+            // projectId: projectIdCounter,
             projectNameData: projectNameInput,
             projectDescription: projectDescriptionInput,
             tags: langTags,
@@ -166,8 +167,10 @@ function handleFormSubmission(e) {
         }
 
         saveProject(projectData);
+        console.log("HI", projectData);
         projectDataToAppend(projectData);
 
+        // let newProjectIdCounnter = 0;
         fetch("http://localhost:3000/getProjects", {
             method: "GET",
             headers: {
@@ -185,7 +188,8 @@ function handleFormSubmission(e) {
                         data.data.forEach((project, index) => {
                             viewProject(project);
                             editProject(project, index);
-                            deleteProject(project, index);
+                            deleteProject(project);
+                            // newProjectIdCounnter = index;
                         });
                     }
                     return;
@@ -199,6 +203,12 @@ function handleFormSubmission(e) {
             .catch(err => {
                 console.log(err);
             })
+
+
+        // console.log(newProjectIdCounnter);
+        // projectIdCounter = newProjectIdCounnter;
+
+        // projectIdCounter++;
     }
 }
 
@@ -367,7 +377,7 @@ function getProjects() {
 
                         viewProject(project);
                         editProject(project, index);
-                        deleteProject(project, index);
+                        deleteProject(project);
                     });
                 }
             }
@@ -500,10 +510,6 @@ function editProject(project, index) {
                 document.getElementById("linkToRepo").value = repohref;
                 document.getElementById("file").value = "";
 
-                // Add the event listener with necessary parameters
-                // projectForm.addEventListener("submit", (e) => {
-                //     handleSubmit(e, tags, index, livehref, repohref);
-                // });
 
                 let addEditedProject = document.getElementById("addProject");
                 addEditedProject.addEventListener("click", (e) => {
@@ -527,6 +533,7 @@ function editProject(project, index) {
 
                     let saveEditedData = {
                         indexValue: index,
+                        projectId: project.projectId,
                         projectNameData: heading.innerHTML,
                         projectDescription: para.innerHTML,
                         tags: allTags,
@@ -586,7 +593,7 @@ function editProject(project, index) {
 
                                         viewProject(project);
                                         editProject(project, index);
-                                        deleteProject(project, index);
+                                        deleteProject(project);
                                     });
                                 }
                             }
@@ -602,75 +609,7 @@ function editProject(project, index) {
     });
 }
 
-// let addEditedProject = document.getElementById("addProject");
-
-// addEditedProject.addEventListener("click", () => {
-//     projectForm.removeEventListener("submit", handleSubmit);
-// });
-
-// function handleSubmit(e, tags, index, livehref, repohref) {
-
-//     e.preventDefault();
-//     projectForm.classList.add("hide");
-//     let heading = e.target.parentElement.parentElement.firstElementChild;
-//     let projectName = heading.innerHTML;
-//     let para = heading.nextElementSibling;
-
-//     let projectImage = e.target.parentElement.parentElement.nextElementSibling;
-//     projectImage.src = "";
-
-//     projectName = document.getElementById("projectName").value;
-//     para.innerHTML = document.getElementById("projectDescription").value;
-//     let newTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
-
-//     newTags.forEach((tagValue, index) => {
-//         tags[index].innerHTML = tagValue;
-//         console.log(tags);
-//     })
-//     livehref = document.getElementById("linkToLiveWebsite").value;
-//     repohref = document.getElementById("linkToRepo").value;
-//     projectImage.src = dataURL;
-
-//     let allTags = document.getElementById("tags").value.split(',').map(tag => tag.trim());
-
-//     let saveEditedData = {
-//         indexValue: index,
-//         projectNameData: heading.innerHTML,
-//         projectDescription: para.innerHTML,
-//         tags: allTags,
-//         projectLiveLink: livehref,
-//         projectRepo: repohref,
-//         projectImg: projectImage.src
-//     };
-
-//     fetch("http://localhost:3000/saveEditedProject", {
-//         method: "POST",
-//         headers: {
-//             "Content-type": "application/json",
-//             "authorization": token
-//         },
-//         body: JSON.stringify(saveEditedData)
-//     })
-//         .then(res => {
-//             return res.json();
-//         })
-//         .then(data => {
-//             if (data.statusCode === "200") {
-//                 console.log(data.data);
-//             }
-//             else if (data.statusCode === "401") {
-//                 console.log(data.message);
-//                 localStorage.removeItem("Token");
-//                 window.location.href == "/client/html/login.html";
-//             }
-//         })
-//         .catch(err => {
-//             console.log(err);
-//         })
-// }
-
-
-function deleteProject(project, index) {
+function deleteProject(project) {
     let projectSection = document.getElementById("allProjects");
     projectSection.addEventListener("click", (e) => {
         let target = e.target;
@@ -683,9 +622,9 @@ function deleteProject(project, index) {
 
                 projectSection.removeChild(parentElementDiv);
                 projectSection.removeChild(projectImage);
+                let Id = project.projectId;
 
-
-                fetch(`http://localhost:3000/deleteProject/${index}`, {
+                fetch(`http://localhost:3000/deleteProject/${Id}`, {
                     method: "DELETE",
                     headers: {
                         "Content-type": "application/json",
@@ -899,7 +838,7 @@ function validateFormProject(projectNameInput, projectDescriptionInput, langTags
         errorLabel.innerHTML = "Please enter the Project Description.";
         pDescription.parentElement.insertAdjacentElement('beforeend', errorLabel);
     }
-    else if (langTags.length === 0 && !errorLabel) {
+    else if (!langTags && !errorLabel) {
         let pTags = document.querySelector('textarea[name="tags"]');
         errorLabel = document.createElement("p");
         errorLabel.classList.add("error-message");
@@ -990,7 +929,7 @@ addExp.addEventListener("click", () => {
                         if (Array.isArray(data.data)) {
                             data.data.forEach((exp, index) => {
                                 editExp(exp, index);
-                                deleteExp(exp, index);
+                                deleteExp(exp);
                             });
                         }
                     }
@@ -1108,13 +1047,13 @@ function getExp() {
         .then(data => {
             if (data.statusCode === "200") {
                 getExpData = data.data;
-                console.log(getExpData);
+                // console.log(getExpData); 
                 if (Array.isArray(getExpData)) {
                     getExpData.forEach((exp, index) => {
                         appendExp(exp);
 
                         editExp(exp, index);
-                        deleteExp(exp, index);
+                        deleteExp(exp);
                     });
                 }
             }
@@ -1252,7 +1191,7 @@ function editExp(expData, existingIndex) {
     }
 }
 
-function deleteExp(exp, index) {
+function deleteExp(exp) {
     let deleteButtonClick = document.querySelectorAll(".delete-exp");
     let expMainDiv = document.getElementById("exp-main-div");
 
@@ -1265,7 +1204,10 @@ function deleteExp(exp, index) {
                 let targetExp = eachdata.parentElement.parentElement;
                 expMainDiv.removeChild(targetExp);
 
-                fetch(`http://localhost:3000/deleteExp/${index}`, {
+                let id = exp.expId;
+                console.log(id);
+
+                fetch(`http://localhost:3000/deleteExp/${id}`, {
                     method: "DELETE",
                     headers: {
                         "Content-type": "application/json",
@@ -1339,7 +1281,7 @@ addEdu.addEventListener("click", () => {
                         if (Array.isArray(data.data)) {
                             data.data.forEach((edu, index) => {
                                 editEdu(edu, index);
-                                deleteEdu(edu, index);
+                                deleteEdu(edu);
                             });
                         }
                     }
@@ -1458,13 +1400,13 @@ function getEdu() {
         .then(data => {
             if (data.statusCode === "200") {
                 getEduData = data.data;
-                console.log(getEduData);
+                // console.log(getEduData);
                 if (Array.isArray(getEduData)) {
                     getEduData.forEach((edu, index) => {
                         appendEdu(edu);
 
                         editEdu(edu, index);
-                        deleteEdu(edu, index);
+                        deleteEdu(edu);
                     });
                 }
             }
@@ -1480,7 +1422,7 @@ function getEdu() {
 }
 getEdu();
 
-function editEdu(eduData, indexValue) {
+function editEdu(eduData, index) {
     let editButtonClick = document.querySelectorAll(".edit-edu");
 
     for (let eachdata of editButtonClick) {
@@ -1512,7 +1454,7 @@ function editEdu(eduData, indexValue) {
                     durationCount.innerHTML = document.getElementById("uniDuration").value + "  years";
 
                     let saveEditededuData = {
-                        index: indexValue,
+                        indexValue: index,
                         degree: degreeName.innerHTML,
                         university: uniName.innerHTML,
                         cgpa: cgpaCount.innerHTML,
@@ -1550,7 +1492,7 @@ function editEdu(eduData, indexValue) {
 
 }
 
-function deleteEdu(eduData, index) {
+function deleteEdu(eduData) {
     let deleteButtonClick = document.querySelectorAll(".delete-edu");
     let mainParent = document.getElementById("edu-main-div");
 
@@ -1563,7 +1505,9 @@ function deleteEdu(eduData, index) {
             let parentElement = eachdata.parentElement.parentElement;
             mainParent.removeChild(parentElement);
 
-            fetch(`http://localhost:3000/deleteEdu/${index}`, {
+            let id = edu.eduId;
+
+            fetch(`http://localhost:3000/deleteEdu/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-type": "application/json",
