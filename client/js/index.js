@@ -1,4 +1,5 @@
 let token = localStorage.getItem("Token");
+let editFlag = false;
 
 // if (token) {
 //     fetch("http://localhost:3000/checkUserTypeOnUser", {
@@ -138,7 +139,6 @@ let projectForm = document.getElementById("project-form");
 let projectDiv = document.getElementById("allProjects");
 let expDiv = document.getElementById("exp");
 
-// let projectIdCounter = 0;
 
 
 function handleFormSubmission(e) {
@@ -157,20 +157,17 @@ function handleFormSubmission(e) {
         projectForm.classList.add("hide");
 
         let projectData = {
-            // projectId: projectIdCounter,
             projectNameData: projectNameInput,
             projectDescription: projectDescriptionInput,
             tags: langTags,
             projectLiveLink: liveLinkInput,
             projectRepo: repoLinkInput,
             projectImg: imageSRC
-        }
+        };
 
         saveProject(projectData);
-        console.log("HI", projectData);
         projectDataToAppend(projectData);
 
-        // let newProjectIdCounnter = 0;
         fetch("http://localhost:3000/getProjects", {
             method: "GET",
             headers: {
@@ -189,7 +186,6 @@ function handleFormSubmission(e) {
                             viewProject(project);
                             editProject(project, index);
                             deleteProject(project);
-                            // newProjectIdCounnter = index;
                         });
                     }
                     return;
@@ -204,11 +200,7 @@ function handleFormSubmission(e) {
                 console.log(err);
             })
 
-
-        // console.log(newProjectIdCounnter);
-        // projectIdCounter = newProjectIdCounnter;
-
-        // projectIdCounter++;
+        console.log("HI", projectData);
     }
 }
 
@@ -222,17 +214,14 @@ addProjectIcon.addEventListener("click", () => {
 
     projectForm.classList.remove("hide");
 
-    projectForm.addEventListener("submit", (e) => {
+});
+
+projectForm.addEventListener("submit", (e) => {
+    if (editFlag === false) {
         handleFormSubmission(e);
-    });
+    }
 
 });
-
-let addProject = document.getElementById("addProject");
-addProject.addEventListener("click", () => {
-    projectForm.removeEventListener("submit", handleFormSubmission);
-});
-
 
 function openFile(e) {
     let input = e.target;
@@ -351,6 +340,8 @@ function saveProject(projectData) {
 }
 
 function getProjects() {
+    console.log("Display thessdfdsfsdffdsafas");
+
     fetch("http://localhost:3000/getProjects", {
         method: "GET",
         headers: {
@@ -369,17 +360,17 @@ function getProjects() {
             }
             else if (data.statusCode === "200") {
                 getProjectData = data.data;
-                console.log(getProjectData);
+                console.log("Display these", getProjectData);
 
-                if (Array.isArray(getProjectData)) {
-                    getProjectData.forEach((project, index) => {
-                        projectDataToAppend(project);
+                // if (Array.isArray(getProjectData)) {
+                getProjectData.forEach((project, index) => {
+                    projectDataToAppend(project);
 
-                        viewProject(project);
-                        editProject(project, index);
-                        deleteProject(project);
-                    });
-                }
+                    viewProject(project);
+                    editProject(project, index);
+                    deleteProject(project);
+                });
+                // }
             }
         })
         .catch(err => {
@@ -481,6 +472,7 @@ function editProject(project, index) {
         let target = e.target;
 
         if (target.classList.contains("edit-project")) {
+            editFlag === true;
             let heading = target.parentElement.parentElement.firstElementChild;
 
             if (project.projectNameData === heading.innerHTML) {
@@ -607,6 +599,8 @@ function editProject(project, index) {
             }
         }
     });
+
+    editFlag === true;
 }
 
 function deleteProject(project) {
@@ -709,23 +703,13 @@ crossViewProject.addEventListener("click", (e) => {
     }
 })
 
-// const resumeInput = document.getElementById('resume');
-// const resumeLink = document.getElementById('resume-link');
-// resumeLink.setAttribute("href", dataURL);
-
-// resumeInput.addEventListener('click', (e) => {
-
-//     const selectedFile = resumeInput.files[0];
-//     const fileURL = URL.createObjectURL(selectedFile);
-
-
-// });
-
 /* ----------------------------------------------------------------------------------*/
 /* ------------------------ Content Editable Data -----------------------------------*/
 /* ----------------------------------------------------------------------------------*/
+let editableFlag = false;
 editIcon.forEach((icon) => {
     icon.addEventListener("click", (e) => {
+        editableFlag = true;
         let precedingElement = e.target.previousElementSibling;
 
         if (precedingElement) {
@@ -744,7 +728,10 @@ document.addEventListener("click", (e) => {
             element.contentEditable = false;
             element.style.backgroundColor = "transparent";
         })
-        contentEditabaleData();
+        if (editableFlag === true) {
+            contentEditabaleData();
+            editableFlag = false;
+        }
     }
 })
 
@@ -1621,6 +1608,8 @@ fetch("http://localhost:3000/appendSocials", {
 
 let selectedElementsDivExp = document.getElementById("selectedElementExp");
 let selectedElementsDivProject = document.getElementById("selectedElementProject");
+let selectedElementsDivEdu = document.getElementById("selectedElementEdu");
+
 let searchBar = document.getElementById("search-items");
 let projectslist = document.getElementById("project");
 let explist = document.getElementById("exp");
@@ -1632,73 +1621,113 @@ searchBar.addEventListener("input", () => {
     let inputData = searchBar.value.toLowerCase();
     let searchResultProject = [];
     let searchResultExp = [];
+    let searchResultEdu = [];
 
     selectedElementsDivExp.innerHTML = "";
     selectedElementsDivProject.innerHTML = "";
+    selectedElementsDivEdu.innerHTML = "";
     noResultsFound = true;
 
     selectedElementsDivExp.classList.remove("hide");
     selectedElementsDivProject.classList.remove("hide");
+    selectedElementsDivEdu.classList.remove("hide");
     projectslist.classList.add("hide");
     explist.classList.add("hide");
 
-    getProjectData.forEach((projectData) => {
-        let projectTags = projectData.tags;
-        let projectMatches =
-            (projectData.projectNameData.toLowerCase().includes(inputData) ||
-                projectData.projectDescription.toLowerCase().includes(inputData) ||
-                projectTags.some(tag => tag.toLowerCase().includes(inputData)));
+    if (Array.isArray(getProjectData)) {
+        getProjectData.forEach((projectData) => {
+            let projectTags = projectData.tags;
+            let projectMatches =
+                (projectData.projectNameData.toLowerCase().includes(inputData) ||
+                    projectData.projectDescription.toLowerCase().includes(inputData) ||
+                    projectTags.some(tag => tag.toLowerCase().includes(inputData)));
 
-        if (projectMatches) {
-            let combinedRow = {
-                project: projectData,
-                projectTags: projectTags
-            };
-            searchResultProject.push(combinedRow);
-            noResultsFound = false;
-            console.log(searchResultProject);
-        }
+            if (projectMatches) {
+                let combinedRow = {
+                    project: projectData,
+                    projectTags: projectTags
+                };
+                searchResultProject.push(combinedRow);
+                noResultsFound = false;
+                console.log(searchResultProject);
+            }
 
-    });
-    getExpData.forEach((expData) => {
-        let expMatches =
-            (expData.company.toLowerCase().includes(inputData) ||
-                expData.duration.toLowerCase().includes(inputData) ||
-                expData.jobInfo.toLowerCase().includes(inputData) ||
-                expData.position.toLowerCase().includes(inputData));
-        if (expMatches) {
-            let combinedRow = {
-                exp: expData
-            };
-            searchResultExp.push(combinedRow);
-            noResultsFound = false;
-            // console.log(searchResults);
-        }
-    });
+        });
+    }
+    if (Array.isArray(getExpData)) {
+        getExpData.forEach((expData) => {
+            let expMatches =
+                (expData.company.toLowerCase().includes(inputData) ||
+                    expData.duration.toLowerCase().includes(inputData) ||
+                    expData.jobInfo.toLowerCase().includes(inputData) ||
+                    expData.position.toLowerCase().includes(inputData));
+            if (expMatches) {
+                let combinedRow = {
+                    exp: expData
+                };
+                searchResultExp.push(combinedRow);
+                noResultsFound = false;
+                // console.log(searchResults);
+            }
+        });
+    }
+    if (Array.isArray(getEduData)) {
+        getEduData.forEach((eduData) => {
+            let eduMatches =
+                (eduData.degree.toLowerCase().includes(inputData) ||
+                    eduData.university.toLowerCase().includes(inputData) ||
+                    eduData.cgpa.toLowerCase().includes(inputData) ||
+                    eduData.duration.toLowerCase().includes(inputData));
+            if (eduMatches) {
+                let combinedRow = {
+                    edu: eduData
+                };
+                searchResultEdu.push(combinedRow);
+                noResultsFound = false;
+                // console.log(searchResults);
+            }
+        });
+    }
 
     let tableRowExp = document.createElement("tr");
     let tableRowProject = document.createElement("tr");
+    let tableRowEdu = document.createElement("tr");
+
     let postionName = document.createElement("th");
     let companysName = document.createElement("th");
     let durationTime = document.createElement("th");
     let positionDetail = document.createElement("th");
+
     let projectNameth = document.createElement("th");
     let projectDescriptionth = document.createElement("th");
     let projectTagsth = document.createElement("th");
 
+    let eduDegree = document.createElement("th");
+    let eduUni = document.createElement("th");
+    let eduCgpa = document.createElement("th");
+    let eduDuration = document.createElement("th");
+
     tableRowExp.classList.add("main-row");
     tableRowProject.classList.add("main-row");
+    tableRowEdu.classList.add("main-row");
 
     projectNameth.innerHTML = "Project Name";
     projectDescriptionth.innerHTML = "Project Description";
     projectTagsth.innerHTML = "Tags";
+
     postionName.innerHTML = "Position";
     companysName.innerHTML = "Company";
     durationTime.innerHTML = "Duration";
     positionDetail.innerHTML = "Details";
 
+    eduDegree.innerHTML = "Degree";
+    eduUni.innerHTML = "University";
+    eduCgpa.innerHTML = "CGPA";
+    eduDuration.innerHTML = "Duration";
+
     selectedElementsDivExp.appendChild(tableRowExp);
     selectedElementsDivProject.appendChild(tableRowProject);
+    selectedElementsDivEdu.appendChild(tableRowEdu);
 
     if (searchResultExp.length > 0) {
         searchResultExp.forEach((result) => {
@@ -1732,6 +1761,7 @@ searchBar.addEventListener("input", () => {
         });
     }
     if (searchResultProject.length > 0) {
+        // console.log(searchResultProject);
         searchResultProject.forEach((result) => {
             tableRowProject.appendChild(projectNameth);
             tableRowProject.appendChild(projectDescriptionth);
@@ -1757,11 +1787,45 @@ searchBar.addEventListener("input", () => {
             selectedElementsDivProject.appendChild(dataRowProject);
         });
     }
+    if (searchResultEdu.length > 0) {
+        // console.log(searchResultEdu);
+        searchResultEdu.forEach((result) => {
+            // console.log(result.edu);
+
+            tableRowEdu.appendChild(eduDegree);
+            tableRowEdu.appendChild(eduUni);
+            tableRowEdu.appendChild(eduCgpa);
+            tableRowEdu.appendChild(eduDuration);
+
+            // console.log(result);
+            let dataRowEdu = document.createElement("tr");
+
+            dataRowEdu.classList.add("table-row");
+
+            let degreeTD = document.createElement("td");
+            let uniTD = document.createElement("td");
+            let cgpaTD = document.createElement("td");
+            let durationTD = document.createElement("td");
+
+            degreeTD.innerHTML = result.edu.degree;
+            uniTD.innerHTML = result.edu.university;
+            cgpaTD.innerHTML = result.edu.cgpa;
+            durationTD.innerHTML = result.edu.duration;
+
+            dataRowEdu.appendChild(degreeTD);
+            dataRowEdu.appendChild(uniTD);
+            dataRowEdu.appendChild(cgpaTD);
+            dataRowEdu.appendChild(durationTD);
+
+            selectedElementsDivEdu.appendChild(dataRowEdu);
+        });
+    }
     else if (noResultsFound) {
         let noResultsItem = document.createElement("li");
         noResultsItem.textContent = "No results found.";
         selectedElementsDivProject.appendChild(noResultsItem);
         selectedElementsDivExp.appendChild(noResultsItem);
+        selectedElementsDivEdu.appendChild(noResultsItem);
     }
 });
 
@@ -1773,6 +1837,7 @@ endSearch.addEventListener("click", () => {
     explist.classList.remove("hide");
     selectedElementsDivProject.classList.add("hide");
     selectedElementsDivExp.classList.add("hide");
+    selectedElementsDivEdu.classList.add("hide");
     searchBar.value = "";
 
 })

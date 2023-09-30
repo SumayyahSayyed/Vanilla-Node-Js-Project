@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "userId": "17e8edb4-b7cb-42a7-87be-438cf206aee9",
+    "Educations": [
+      {
+        "eduId": 0,
+        "degree": "BS. Computer Science",
+        "university": "Sharif College of Engineering and Technology",
+        "cgpa": "0.027",
+        "duration": "2  years"
+      },
+      {
+        "eduId": 1,
+        "degree": "BS. Masters Science DEGREE",
+        "university": "Sharif College of Engineering and Technology",
+        "cgpa": "1.058",
+        "duration": "4 years"
+      }
+    ]
+  }
+]

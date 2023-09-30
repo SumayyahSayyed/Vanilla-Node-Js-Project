@@ -561,3 +561,16 @@ button:hover {
 
     }
 }
+
+/* Tags */
+
+.tags-span {
+    padding: .3em .5em;
+    background-color: #4b5cbe;
+    color: white;
+    margin: 1em .5em 1em 0;
+}
+
+#tags-container {
+    margin: 1em 0;
+}

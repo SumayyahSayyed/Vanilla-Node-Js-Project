@@ -90,7 +90,7 @@ function getUsers() {
             console.log(data);
             getUserData = data.userData;
             let projects = data.projects;
-            // console.log(projects);
+            // console.log(getUserData);
 
             appendUsers(getUserData);
             searchUser(getUserData);
@@ -147,7 +147,6 @@ function appendUsers(getUserData) {
     tableRow.appendChild(userEmail);
     tableRow.appendChild(userPhone);
     tableRow.appendChild(action);
-
 
     for (let eachuser of getUserData) {
         let dataRow = document.createElement("tr");
@@ -231,10 +230,10 @@ let addNewUser = document.getElementById("addNewUser");
 
 function editUser(user) {
     let editUserBtn = document.querySelectorAll(".edit-icon");
-    let submitButton = document.getElementById("submit-button");
 
     for (let eachEditButton of editUserBtn) {
         eachEditButton.addEventListener("click", (e) => {
+            // console.log("clicked");
             let tableRow = e.target.closest("tr");
             addUser.classList.remove("hide");
             usersTable.classList.add("hide");
@@ -365,20 +364,24 @@ function searchUser(credentials) {
         let userName = document.createElement("th");
         let userEmail = document.createElement("th");
         let userPhone = document.createElement("th");
+        let action = document.createElement("th");
 
         tableRow.classList.add("main-row");
 
         userName.innerHTML = "Name";
         userEmail.innerHTML = "Email";
         userPhone.innerHTML = "Phone";
+        action.innerHTML = "Actions";
 
         searchContainer.appendChild(tableRow);
         tableRow.appendChild(userName);
         tableRow.appendChild(userEmail);
         tableRow.appendChild(userPhone);
+        tableRow.appendChild(action);
 
         if (searchResults.length > 0) {
             searchResults.forEach((result) => {
+
                 // console.log(result);
                 let dataRow = document.createElement("tr");
                 dataRow.classList.add("table-row");
@@ -386,17 +389,43 @@ function searchUser(credentials) {
                 let nameData = document.createElement("td");
                 let emailData = document.createElement("td");
                 let phoneData = document.createElement("td");
+                let actionData = document.createElement("td");
 
-                // Access user and project data from the combined row
-                nameData.innerHTML = result.user.firstName + " " + result.user.lastName;
-                emailData.innerHTML = result.user.userEmail;
-                phoneData.innerHTML = result.user.userPhone;
+                if (result.user.userEmail !== "admin123@gmail.com") {
+                    // Access user and project data from the combined row
+                    nameData.innerHTML = result.user.firstName + " " + result.user.lastName;
+                    emailData.innerHTML = result.user.userEmail;
+                    phoneData.innerHTML = result.user.userPhone;
 
-                dataRow.appendChild(nameData);
-                dataRow.appendChild(emailData);
-                dataRow.appendChild(phoneData);
-                searchContainer.appendChild(dataRow);
+                    let iconDiv = document.createElement("div");
+                    let editIcon = document.createElement("img");
+                    let deleteIcon = document.createElement("img");
+
+                    iconDiv.classList.add("icon-div");
+                    editIcon.setAttribute("src", "../assets/editable-icon/edit.png");
+                    editIcon.classList.add("edit-icon");
+                    deleteIcon.setAttribute("src", "../assets/editable-icon/delete.png");
+                    deleteIcon.classList.add("delete-icon");
+                    nameData.classList.add("name-data");
+                    emailData.classList.add("email-data");
+                    phoneData.classList.add("phone-data");
+
+                    dataRow.appendChild(nameData);
+                    dataRow.appendChild(emailData);
+                    dataRow.appendChild(phoneData);
+
+                    iconDiv.appendChild(editIcon);
+                    iconDiv.appendChild(deleteIcon);
+                    actionData.appendChild(iconDiv);
+                    dataRow.appendChild(actionData);
+
+                    searchContainer.appendChild(dataRow);
+
+                    deleteUser(result.user);
+                    editUser(result.user);
+                }
             });
+
         } else if (noResultsFound) {
             let noResultsItem = document.createElement("li");
             noResultsItem.textContent = "No results found.";
@@ -417,20 +446,6 @@ crossSearch.addEventListener("click", () => {
     projectsTable.classList.remove("hide");
     projectsTable.style.display = "block";
 })
-
-
-document.addEventListener("click", (e) => {
-    let searchBar = document.getElementById("search");
-    let selectedElement = e.target;
-    if (!selectedElement.classList.contains("searchTable")) {
-        searchContainer.classList.add("none");
-        usersMainHeading.classList.remove("hide");
-        usersTable.classList.remove("hide");
-        // addNewUser.classList.remove("hide");
-        searchBar.value = "";
-    }
-})
-
 
 /*------------------------------------------- Projects -------------------------------------------*/
 
@@ -458,11 +473,13 @@ function viewFullProject(allProjects) {
             let listContent = e.target.closest('li').textContent;
 
             for (let eachUsersproject of allProjects) {
+                // console.log(eachUsersproject);
                 for (let eachProject of eachUsersproject.Projects) {
                     if (eachProject.projectNameData === listContent) {
                         let projectImage = document.getElementById("projectImage");
                         let projectHeading = document.getElementById("projectHeading");
                         let pDescription = document.getElementById("projectDescription");
+                        let tagsContainer = document.getElementById("tags-container");
                         let seeLive = document.getElementById("seeLive");
                         let repoLink = document.getElementById("repoLink");
 
@@ -472,6 +489,17 @@ function viewFullProject(allProjects) {
                         pDescription.innerHTML = eachProject.projectDescription;
                         seeLive.setAttribute('href', eachProject.projectLiveLink);
                         repoLink.setAttribute('href', eachProject.projectRepo);
+
+                        let allTags = eachProject.tags;
+                        tagsContainer.innerHTML = '';
+
+                        allTags.forEach(tag => {
+                            let tagSpan = document.createElement("span");
+                            tagSpan.classList.add("tags-span");
+
+                            tagSpan.innerHTML = tag;
+                            tagsContainer.appendChild(tagSpan);
+                        });
                     }
                 }
             }
@@ -482,7 +510,7 @@ function viewFullProject(allProjects) {
 let searchContainerProjects = document.getElementById("searchContainerProjects");
 
 function searchProject(getUserData, allProjects) {
-    console.log(allProjects);
+    // console.log(allProjects);
     let projectsTable = document.getElementById("projectsTable");
     let searchBar = document.getElementById("search");
     let searchContainerProjects = document.getElementById("searchContainerProjects");
@@ -508,10 +536,8 @@ function searchProject(getUserData, allProjects) {
                 eachUserProjects.forEach((projectData) => {
                     // console.log(projectData)
                     if (
-                        projectData.projectNameData.toLowerCase().includes(inputData) ||
-                        projectData.projectDescription.toLowerCase().includes(inputData)
+                        projectData.projectNameData.toLowerCase().includes(inputData)
                     ) {
-
                         let userID = project.userId;
                         // console.log(userID);
                         let findUser = getUserData.find(user => user.userId === userID);
@@ -548,27 +574,33 @@ function searchProject(getUserData, allProjects) {
             searchResults.forEach((result) => {
                 if (result.email !== "admin1232gmail.com") {
 
-                    // console.log("RESULT", result);
                     let dataRow = document.createElement("tr");
                     dataRow.classList.add("table-row");
 
                     let emailData = document.createElement("td");
                     let projectData = document.createElement("td");
-                    let projectspan = document.createElement("span");
+
+                    let projectsList = document.createElement("ul");
+                    let listData = document.createElement("li");
+
                     let viewIconDiv = document.createElement("div");
                     let viewIcon = document.createElement("img");
-                    viewIcon.classList.add("view-icon");
 
-                    emailData.innerHTML = result.email;
-                    projectspan.innerHTML = result.project.projectNameData;
-                    viewIcon.setAttribute("src", "../assets/editable-icon/eye.png");
+                    projectsList.classList.add("project-ul");
+                    listData.classList.add("project-li");
+                    viewIcon.classList.add("view-icon");
                     projectData.classList.add("projectElement");
                     viewIconDiv.classList.add("view-icon-div");
 
+                    emailData.innerHTML = result.email;
+                    listData.innerHTML = result.project.projectNameData;
+                    viewIcon.setAttribute("src", "../assets/editable-icon/eye.png");
+
                     viewIconDiv.appendChild(viewIcon);
                     dataRow.appendChild(emailData);
-                    projectData.appendChild(projectspan);
-                    projectData.appendChild(viewIconDiv);
+                    projectsList.appendChild(listData);
+                    listData.appendChild(viewIconDiv);
+                    projectData.appendChild(projectsList);
                     dataRow.appendChild(projectData);
                     searchContainerProjects.appendChild(dataRow);
 
