@@ -1,5 +1,7 @@
 let token = localStorage.getItem("Token");
 let editFlag = false;
+let editExpFlag = false;
+let editEduFlag = false;
 
 // if (token) {
 //     fetch("http://localhost:3000/checkUserTypeOnUser", {
@@ -220,7 +222,6 @@ projectForm.addEventListener("submit", (e) => {
     if (editFlag === false) {
         handleFormSubmission(e);
     }
-
 });
 
 function openFile(e) {
@@ -472,7 +473,7 @@ function editProject(project, index) {
         let target = e.target;
 
         if (target.classList.contains("edit-project")) {
-            editFlag === true;
+            editFlag = true;
             let heading = target.parentElement.parentElement.firstElementChild;
 
             if (project.projectNameData === heading.innerHTML) {
@@ -600,7 +601,7 @@ function editProject(project, index) {
         }
     });
 
-    editFlag === true;
+    editFlag = false;
 }
 
 function deleteProject(project) {
@@ -879,59 +880,67 @@ addExp.addEventListener("click", () => {
     document.getElementById("jobInfo").value = "";
     expForm.classList.remove("hide");
 
-    expForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        let expPosition = document.getElementById("experiencePos").value;
-        let companyName = document.getElementById("company").value;
-        let expDuration = document.getElementById("duration").value + " months";
-        let jobDescription = document.getElementById("jobInfo").value;
+});
 
-        if (!expPosition || !companyName || !expDuration || !jobDescription) {
-            validateFormExp(expPosition, companyName, expDuration, jobDescription);
-        } else {
-            expForm.classList.add("hide");
-            let expData = {
-                position: expPosition,
-                company: companyName,
-                duration: expDuration,
-                jobInfo: jobDescription
+expForm.addEventListener("submit", (e) => {
+    if (editExpFlag === false) {
+        handleExpForm(e);
+    }
+});
+
+function handleExpForm(e) {
+    e.preventDefault();
+    let expPosition = document.getElementById("experiencePos").value;
+    let companyName = document.getElementById("company").value;
+    let expDuration = document.getElementById("duration").value + " months";
+    let jobDescription = document.getElementById("jobInfo").value;
+
+    if (!expPosition || !companyName || !expDuration || !jobDescription) {
+        validateFormExp(expPosition, companyName, expDuration, jobDescription);
+    } else {
+        expForm.classList.add("hide");
+        let expData = {
+            position: expPosition,
+            company: companyName,
+            duration: expDuration,
+            jobInfo: jobDescription
+        }
+
+        saveExp(expData);
+        appendExp(expData)
+
+        fetch("http://localhost:3000/getExp", {
+            method: "GET",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
             }
-
-            saveExp(expData);
-            appendExp(expData)
-
-            fetch("http://localhost:3000/getExp", {
-                method: "GET",
-                headers: {
-                    "Content-type": "application/json",
-                    "authorization": token
+        })
+            .then(res => {
+                return res.json();
+            })
+            .then(data => {
+                if (data.statusCode === "200") {
+                    console.log(data.data);
+                    if (Array.isArray(data.data)) {
+                        data.data.forEach((exp, index) => {
+                            editExp(exp, index);
+                            deleteExp(exp);
+                        });
+                    }
+                }
+                else if (data.statusCode === "401") {
+                    console.log(data.message);
+                    localStorage.removeItem("Token");
+                    window.location.href == "/client/html/login.html";
                 }
             })
-                .then(res => {
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.statusCode === "200") {
-                        console.log(data.data);
-                        if (Array.isArray(data.data)) {
-                            data.data.forEach((exp, index) => {
-                                editExp(exp, index);
-                                deleteExp(exp);
-                            });
-                        }
-                    }
-                    else if (data.statusCode === "401") {
-                        console.log(data.message);
-                        localStorage.removeItem("Token");
-                        window.location.href == "/client/html/login.html";
-                    }
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-        }
-    })
-})
+            .catch(err => {
+                console.log(err);
+            })
+    }
+
+}
 let crossExp = document.getElementById("cross-exp");
 crossExp.addEventListener("click", () => {
     expForm.classList.add("hide");
@@ -1106,7 +1115,7 @@ function editExp(expData, existingIndex) {
 
     for (let eachData of editButtonClick) {
         eachData.addEventListener("click", (e) => {
-
+            editExpFlag = true;
             let target = e.target;
             let expForm = document.getElementById("exp-form");
             let addExp = document.getElementById("addExp");
@@ -1176,6 +1185,7 @@ function editExp(expData, existingIndex) {
         });
 
     }
+    editExpFlag = false;
 }
 
 function deleteExp(exp) {
@@ -1230,60 +1240,67 @@ addEdu.addEventListener("click", () => {
     document.getElementById("cgpa").value = "";
     document.getElementById("uniDuration").value = "";
     eduForm.classList.remove("hide");
+});
 
-    eduForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        let eduDegree = document.getElementById("degree").value;
-        let eduUni = document.getElementById("university").value;
-        let eduCgpa = document.getElementById("cgpa").value;
-        let eduDuration = document.getElementById("uniDuration").value + " years";
+eduForm.addEventListener("submit", (e) => {
+    if (editEduFlag === false) {
+        handleEduForm(e);
+    }
+})
 
-        if (!eduDegree || !eduUni || !eduCgpa || !eduDuration) {
-            validateForm(eduDegree, eduUni, eduCgpa, eduDuration);
-        } else {
-            eduForm.classList.add("hide");
-            let eduData = {
-                degree: eduDegree,
-                university: eduUni,
-                cgpa: eduCgpa,
-                duration: eduDuration,
+function handleEduForm(e) {
+    e.preventDefault();
+    let eduDegree = document.getElementById("degree").value;
+    let eduUni = document.getElementById("university").value;
+    let eduCgpa = document.getElementById("cgpa").value;
+    let eduDuration = document.getElementById("uniDuration").value + " years";
+
+    if (!eduDegree || !eduUni || !eduCgpa || !eduDuration) {
+        validateForm(eduDegree, eduUni, eduCgpa, eduDuration);
+    } else {
+        eduForm.classList.add("hide");
+        let eduData = {
+            degree: eduDegree,
+            university: eduUni,
+            cgpa: eduCgpa,
+            duration: eduDuration,
+        }
+
+        saveEdu(eduData);
+        appendEdu(eduData);
+
+        fetch("http://localhost:3000/getEdu", {
+            method: "GET",
+            headers: {
+                "Content-type": "application/json",
+                "authorization": token
             }
-
-            saveEdu(eduData);
-            appendEdu(eduData);
-
-            fetch("http://localhost:3000/getEdu", {
-                method: "GET",
-                headers: {
-                    "Content-type": "application/json",
-                    "authorization": token
+        })
+            .then(res => {
+                return res.json();
+            })
+            .then(data => {
+                if (data.statusCode === "200") {
+                    console.log(data.data);
+                    if (Array.isArray(data.data)) {
+                        data.data.forEach((edu, index) => {
+                            editEdu(edu, index);
+                            deleteEdu(edu);
+                        });
+                    }
+                }
+                else if (data.statusCode === "401") {
+                    console.log(data.message);
+                    localStorage.removeItem("Token");
+                    window.location.href == "/client/html/login.html";
                 }
             })
-                .then(res => {
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.statusCode === "200") {
-                        console.log(data.data);
-                        if (Array.isArray(data.data)) {
-                            data.data.forEach((edu, index) => {
-                                editEdu(edu, index);
-                                deleteEdu(edu);
-                            });
-                        }
-                    }
-                    else if (data.statusCode === "401") {
-                        console.log(data.message);
-                        localStorage.removeItem("Token");
-                        window.location.href == "/client/html/login.html";
-                    }
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-        }
-    })
-})
+            .catch(err => {
+                console.log(err);
+            })
+    }
+}
+
 let crossEdu = document.getElementById("cross-education");
 crossEdu.addEventListener("click", () => {
     eduForm.classList.add("hide");
@@ -1416,7 +1433,7 @@ function editEdu(eduData, index) {
         let eduForm = document.getElementById("edu-form");
         let addEdu = document.getElementById("addEdu");
         eachdata.addEventListener("click", (e) => {
-
+            editEduFlag = true;
             eduForm.classList.remove("hide");
             let degreeName = eachdata.parentElement.parentElement.firstChild.firstElementChild;
             let uniName = degreeName.nextElementSibling;
@@ -1476,7 +1493,7 @@ function editEdu(eduData, index) {
             });
         });
     }
-
+    editEduFlag = false;
 }
 
 function deleteEdu(eduData) {

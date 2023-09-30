@@ -1,6 +1,21 @@
 [
   {
-    "userId": "17e8edb4-b7cb-42a7-87be-438cf206aee9",
-    "Experiences": []
+    "userId": "751b2a12-f5f2-4625-a61f-b5fdaa4156b6",
+    "Experiences": [
+      {
+        "expId": 0,
+        "position": "JavaScript Developer",
+        "company": "MeanArena",
+        "duration": "4 months",
+        "jobInfo": "d jkjdjkj"
+      },
+      {
+        "expId": 1,
+        "position": "New Js Developerb jshh",
+        "company": " h jdhjhdhjh",
+        "duration": "3 months",
+        "jobInfo": "skj dkjkj"
+      }
+    ]
   }
 ]

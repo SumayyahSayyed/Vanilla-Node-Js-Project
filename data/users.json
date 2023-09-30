@@ -1,34 +1,10 @@
 [
   {
-    "userId": "17e8edb4-b7cb-42a7-87be-438cf206aee9",
+    "userId": "751b2a12-f5f2-4625-a61f-b5fdaa4156b6",
     "firstName": "Sumayyah",
     "lastName": "Sayyed",
     "userPhone": "03244838069",
     "userEmail": "sumayyahsayyed26@gmail.com",
-    "hashedPassword": "$2b$10$/xFV5yRwRFSbQdOcElYWaeq2tdA82Z.s44WIKANuCtR5SOqKXskRe"
-  },
-  {
-    "userId": "45860ed8-098c-4d48-98b0-dcfed9ad6061",
-    "firstName": "Ayesha",
-    "lastName": "Asif",
-    "userPhone": "03215063269",
-    "userEmail": "ashley123@gmail.com",
-    "hashedPassword": "$2b$10$pMjtMisi5wCRcwluNv1igewOVLyZxbnTOoJbbhjKqAY56bAfIptFK"
-  },
-  {
-    "userId": "e9501239-58bb-42c0-a125-adf7d1761625",
-    "firstName": "Sumayyah",
-    "lastName": "Sayyed",
-    "userPhone": "03244838069",
-    "userEmail": "admin123@gmail.com",
-    "hashedPassword": "$2b$10$OmdXuvEdJyHFkwa7IXBMEuthD0Tx2gfNkniOQoEwcvZNNcUY9uY8G"
-  },
-  {
-    "userId": "54dc67c5-0d41-425c-ae6e-8b61c953929c",
-    "firstName": "Ayesha",
-    "lastName": "Umar",
-    "userPhone": "03249876543",
-    "userEmail": "ashumar200@gmail.com",
-    "hashedPassword": "$2b$10$VNux6F5XRrDkgrdMrv5puO2dmP6HxXkDoA9Huu3mgU.QgcK9/Yrtu"
+    "hashedPassword": "$2b$10$SdOngMWsO6L55culTaisxeroPS.kdYB10Iz/HDfTZ/C/lEOIpy6T2"
   }
 ]
