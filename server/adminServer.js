@@ -1,194 +1,193 @@
-const fs = require('fs');
-
 const { getAndVerifyToken } = require('./authentication');
+const db = require('./dbServer');
 
 function getDataForAdmin(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
             try {
-                const usersData = JSON.parse(fs.readFileSync("../data/users.json", "utf8"));
-                const projectsData = JSON.parse(fs.readFileSync("../data/projects.json", "utf8"));
+                const usersQuery = `
+                    SELECT user_ID, Name, Phone, Email, userType FROM users`;
 
-                const userDataArray = [];
+                const projectsQuery = `
+                    SELECT * FROM projects`;
 
-                for (let eachUserData of usersData) {
-                    let userCredentials = {
-                        userId: eachUserData.userId,
-                        firstName: eachUserData.firstName,
-                        lastName: eachUserData.lastName,
-                        userPhone: eachUserData.userPhone,
-                        userEmail: eachUserData.userEmail
-                    };
+                db.query(usersQuery, [], (err1, userResults) => {
+                    if (err1) {
+                        console.error('Error retrieving user data:', err1);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '500',
+                            message: 'Internal Server Error'
+                        }));
+                        return;
+                    }
 
-                    userDataArray.push(userCredentials);
-                }
+                    const userDataArray = userResults.map((userData) => {
+                        return {
+                            userId: userData.user_ID,
+                            userName: userData.Name,
+                            userPhone: userData.Phone,
+                            userEmail: userData.Email,
+                            userType: userData.userType
+                        };
+                    });
 
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '200',
-                    message: 'Data received successfully',
-                    userData: userDataArray,
-                    projects: projectsData
-                }));
+                    db.query(projectsQuery, [], (err2, projectResults) => {
+                        if (err2) {
+                            console.error('Error retrieving project data:', err2);
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '500',
+                                message: 'Internal Server Error'
+                            }));
+                            return;
+                        }
+
+                        const projectDataArray = projectResults.map((projectData) => {
+                            return {
+                                userId: projectData.user_ID,
+                                projectNameData: projectData.Name,
+                                projectDescription: projectData.Description,
+                                tags: projectData.Tags,
+                                projectLiveLink: projectData.LiveLink,
+                                projectRepo: projectData.SourceCode,
+                                projectImg: projectData.ProjectImg
+                            };
+                        });
+
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '200',
+                            message: 'Data retrieved successfully',
+                            userData: userDataArray,
+                            projects: projectDataArray
+                        }));
+                    });
+                });
             } catch (error) {
+                console.error('Error in getDataForAdmin:', error);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: '500',
                     message: 'Internal Server Error'
                 }));
             }
-        } else {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                statusCode: '400',
-                message: 'User not found'
-            }));
         }
     });
 }
 
 function deleteUser(req, res) {
-    const id = req.url.split('/').pop();
-    console.log("1013---------", id);
+    const ID = req.url.split('/').pop();
+    console.log("1013---------", ID);
 
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
+            // Delete the user record
+            const deleteUserQuery = `
+                DELETE FROM users
+                WHERE user_ID = ?
+            `;
 
-            console.log(id);
-            let users = fs.readFileSync("../data/users.json", "utf8");
-            let projects = fs.readFileSync("../data/projects.json", "utf8");
-            let experiences = fs.readFileSync("../data/experience.json", "utf8");
-            let educations = fs.readFileSync("../data/education.json", "utf8");
-            let editables = fs.readFileSync("../data/editable.json", "utf8");
-            let socials = fs.readFileSync("../data/socials.json", "utf8");
-            let tokens = fs.readFileSync("../data/tokens.json", "utf8");
-
-            let allUsers = JSON.parse(users);
-            let allProjects = JSON.parse(projects);
-            let allExperience = JSON.parse(experiences);
-            let allEducations = JSON.parse(educations);
-            let allEditables = JSON.parse(editables);
-            let allSocials = JSON.parse(socials);
-            let allTokens = JSON.parse(tokens);
-
-            let findUserIndex = allUsers.findIndex(user => user.userId === id);
-            let findProjectIndex = allProjects.findIndex(user => user.userId === id);
-            let findExpIndex = allExperience.findIndex(user => user.userId === id);
-            let findEduIndex = allEducations.findIndex(user => user.userId === id);
-            let findEditableIndex = allEditables.findIndex(user => user.userId === id);
-            let findSocialsIndex = allSocials.findIndex(user => user.userId === id);
-
-            allTokens.forEach((token, index) => {
-                if (token.userId === id) {
-                    allTokens.splice(index, 1);
-                    fs.writeFile("../data/tokens.json", JSON.stringify(allTokens, null, 2), (err) => {
-                        if (err) {
-                            console.error(err);
-                        } else {
-                            console.log("Tokens removed successfully.");
-                        }
-                    });
+            db.query(deleteUserQuery, [ID], (err, result) => {
+                if (err) {
+                    console.error('Error deleting user:', err);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        statusCode: '500',
+                        message: 'Internal Server Error'
+                    }));
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        statusCode: '200',
+                        message: 'User and associated data deleted successfully'
+                    }));
                 }
             });
-
-
-            if (findUserIndex !== -1 || findProjectIndex !== -1 || findExpIndex !== -1 ||
-                findEduIndex !== -1 || findEditableIndex !== -1 || findSocialsIndex !== -1) {
-
-                allUsers.splice(findUserIndex, 1);
-                allProjects.splice(findProjectIndex, 1);
-                allExperience.splice(findExpIndex, 1);
-                allEducations.splice(findEduIndex, 1);
-                allEditables.splice(findEditableIndex, 1);
-                allSocials.splice(findSocialsIndex, 1);
-
-                fs.writeFile("../data/users.json", JSON.stringify(allUsers, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-
-                fs.writeFile("../data/projects.json", JSON.stringify(allProjects, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-                fs.writeFile("../data/experience.json", JSON.stringify(allExperience, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-                fs.writeFile("../data/education.json", JSON.stringify(allEducations, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-                fs.writeFile("../data/editable.json", JSON.stringify(allEditables, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-                fs.writeFile("../data/socials.json", JSON.stringify(allSocials, null, 2), (err) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("File written successfully.");
-                    }
-                });
-            }
         }
+    });
+}
+
+function getUserIdFromDB(userIdData) {
+
+    const findID = `
+        SELECT user_ID FROM users    
+    `;
+    const userIDs = [];
+    db.query(findID, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            return;
+        }
+
+        for (let eachId of results) {
+            let ids = {
+                userID: eachId.user_ID,
+                expID: eachId.exp_ID
+            };
+            userIDs.push(ids)
+        }
+        userIdData(null, userIDs);
     });
 }
 
 function updateUser(req, res) {
     let body = "";
-    const id = req.url.split('/').pop();
-    console.log("Update User Id ---------", id);
+    const ID = req.url.split('/').pop();
+    console.log("Update User Id ---------", ID);
 
     req.on('data', (chunk) => {
         body += chunk.toString();
     });
     req.on('end', async () => {
-        const { firstName, lastName, userEmail, userPhone } = JSON.parse(body);
-        const userInfo = { firstName, lastName, userEmail, userPhone };
+        const { firstName, lastName, userPhone, userEmail } = JSON.parse(body);
+        const userInfo = { firstName, lastName, userPhone, userEmail };
 
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let users = fs.readFileSync("../data/users.json", "utf8");
-                let allUsers = JSON.parse(users);
+                getUserIdFromDB((err, userIDs) => {
+                    if (err) {
+                        console.error('Error getting user IDs:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '500',
+                            message: 'Internal Server Error'
+                        }));
+                        return;
+                    }
 
-                let findUser = allUsers.find(user => user.userId === id);
-                if (findUser) {
+                    for (let i = 0; i < userIDs.length; i++) {
+                        const id = userIDs[i];
 
-                    // const user = allUsers[index]
-                    // console.log("Found the user: ", user);
-                    findUser.firstName = userInfo.firstName;
-                    findUser.lastName = userInfo.lastName;
-                    findUser.userEmail = userInfo.userEmail;
-                    findUser.userPhone = userInfo.userPhone;
-
-                    fs.writeFileSync("../data/users.json", JSON.stringify(allUsers, null, 2), "utf8");
-
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        statusCode: '200',
-                        message: 'Data received and saved successfully'
-                    }));
-                }
-
+                        if (id.userID === ID) {
+                            let updateUserData = `
+                                UPDATE users
+                                SET Name = ?, Phone = ?, Email = ?
+                                WHERE user_ID = ?
+                            `;
+                            db.query(updateUserData, [`${firstName} ${lastName}`, userPhone, userEmail, ID], (err, results) => {
+                                if (err) {
+                                    console.error('Error updating user data:', err);
+                                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                                    res.end(JSON.stringify({
+                                        statusCode: '500',
+                                        message: 'Internal Server Error'
+                                    }));
+                                } else {
+                                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                                    res.end(JSON.stringify({
+                                        statusCode: '200',
+                                        message: 'User Data updated successfully',
+                                    }));
+                                }
+                            });
+                            break;
+                        }
+                    }
+                });
             }
         });
-    })
+    });
 }
 
 module.exports = {

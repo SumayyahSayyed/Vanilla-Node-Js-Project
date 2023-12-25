@@ -1,7 +1,7 @@
-let submit = document.getElementById("social-form");
-let token = localStorage.getItem("Token");
+let socialForm = document.getElementById("social-form");
 
-submit.addEventListener("submit", (e) => {
+socialForm.addEventListener("submit", (e) => {
+    let token = localStorage.getItem("Token")
     e.preventDefault();
 
     let github = document.getElementById("github").value;

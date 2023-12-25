@@ -14,10 +14,10 @@ if (token) {
                 alert(data.message);
             }
             else if (data.statusCode === "200") {
-                if (data.data === "admin123@gmail.com") {
+                if (data.data === "admin123@gmail.com" || data.data === "admin456@gmail.com") {
                     window.location.href = "../html/admin.html";
                 }
-                else if (data.data !== "admin123@gmail.com") {
+                else if (data.data !== "admin123@gmail.com" && data.data !== "admin456@gmail.com") {
                     window.location.href = "../html/portfolio.html";
                 }
             }
@@ -34,11 +34,8 @@ if (token) {
 // window.onunload = function () { null };
 
 
-
-
 let submit = document.getElementById("register-form");
-
-const generateId = () => Math.random().toString(36);
+// let expirationTime = new Date().getTime() + 30 * 1000;
 
 submit.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -75,16 +72,22 @@ submit.addEventListener("submit", (e) => {
                 if (data.statusCode === "400") {
                     alert(data.message);
                 }
-                else if (data.email === "admin123@gmail.com" && data.statusCode === "200") {
+                else if (data.email === "admin123@gmail.com" && data.statusCode === "200" ||
+                    data.email === "admin456@gmail.com" && data.statusCode === "200"
+                ) {
                     console.log("admin console");
                     console.log(data.message);
                     localStorage.setItem("Token", data.token);
+                    // localStorage.setItem('tokenExpiration', expirationTime);
                     window.location.href = "../html/admin.html";
                 }
-                else if (data.email !== "admin123@gmail.com" && data.statusCode === "200") {
+                else if (data.email !== "admin123@gmail.com" && data.statusCode === "200" ||
+                    data.email !== "admin456@gmail.com" && data.statusCode === "200"
+                ) {
                     console.log("user console");
                     console.log(data.message);
                     localStorage.setItem("Token", data.token);
+                    // localStorage.setItem('tokenExpiration', expirationTime);
                     window.location.href = "../html/social.html";
                 }
             })

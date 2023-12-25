@@ -9,9 +9,28 @@
     margin-left: auto;
 }
 
+.search-div {
+    position: relative;
+    display: inline-block;
+}
+
+#search-items {
+    padding-right: 30px;
+    width: 200px;
+}
+
+.icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
 #end-search,
+#start-search,
 #cross-view-project {
-    width: 15px;
+    width: 17px;
     padding: 1em;
 }
 
@@ -28,7 +47,6 @@
     margin-bottom: 3em;
 }
 
-#end-search:hover,
 #cross-view-project:hover {
     background-color: rgb(230, 230, 230);
     cursor: pointer;
@@ -268,4 +286,8 @@ button:hover {
     display: flex;
     flex-direction: column;
     gap: 3em;
+}
+
+#adminUser {
+    padding-left: 3em;
 }

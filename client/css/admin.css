@@ -159,14 +159,27 @@ img {
     margin-bottom: .5em;
 }
 
-#cross-search {
+#cross-search,
+#start-search {
     width: 15px;
     /* margin-left: auto; */
-    padding: 1em;
+    /* padding: 1em; */
 }
 
-#cross-view-project:hover,
-#cross-search:hover {
+.search-bar {
+    position: relative;
+    display: inline-block;
+}
+
+.icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+#cross-view-project:hover {
     background-color: rgb(230, 230, 230);
     cursor: pointer;
 }

@@ -17,6 +17,7 @@
 <body>
     <nav class="navbar">
         <a href="" id="logout">Logout</a>
+        <a href="../html/admin.html" class="hide" id="adminUser">Admin</a>
     </nav>
     <section class="header">
         <h1>
@@ -58,7 +59,12 @@
         <section class="forSearch" id="forSearch">
             <div class="search-div">
                 <input type="text" placeholder="Search..." id="search-items">
-                <img src="../assets/editable-icon/cross.png" alt="" id="end-search">
+                <img src="../assets/editable-icon/search.png" id="start-search" class="icon ">
+                <img src="../assets/editable-icon/cross.png" id="end-search" class="icon hide">
+            </div>
+
+            <div id="resultsDiv">
+
             </div>
 
             <div class="search-append">
@@ -170,7 +176,7 @@
             </form>
         </section>
 
-        <section id="education-section">
+        <section id="education-section" class="">
             <h2>Education</h2>
             <p id="plus-edu">+</p>
 
@@ -261,6 +267,15 @@
     </footer>
 
     <script src="../js/index.js"></script>
+    <script src="../js/profile.js"></script>
+    <script src="../js/contentEditable.js"></script>
+    <script src="../js/pdf.js"></script>
+    <!-- <script src="../js/social.js"></script> -->
+    <script src="../js/projects.js"></script>
+    <script src="../js/experience.js"></script>
+    <script src="../js/education.js"></script>
+    <script src="../js/logout.js"></script>
+    <script src="../js/checkToken.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const db = require("./dbServer");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
@@ -6,7 +7,7 @@ dotenv.config();
 
 const secretKey = process.env.JWT_SECRET_KEY;
 
-function LogIn(req, res) {
+async function LogIn(req, res) {
     let body = "";
     req.on('data', (chunk) => {
         body += chunk.toString();
@@ -14,58 +15,57 @@ function LogIn(req, res) {
     req.on('end', async () => {
         const { verifyEmail, verifyPassword } = JSON.parse(body);
 
-        const data = fs.readFileSync('../data/users.json', 'utf8');
-        jsonData = JSON.parse(data);
+        const userQuery = `SELECT user_ID, Email, Password FROM users WHERE Email = ?`;
 
-        const user = jsonData.find(user => user.userEmail === verifyEmail);
-        if (user) {
-            const passwordMatch = await bcrypt.compare(verifyPassword, user.hashedPassword);
+        db.query(userQuery, [verifyEmail], async (err, results) => {
+            if (err) {
+                console.error('Error checking for an existing user:', err);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: "500",
+                    message: 'Internal Server Error'
+                }));
+                return;
+            }
+
+            if (results.length === 0) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    statusCode: '404',
+                    message: 'User not found'
+                }));
+                return;
+            }
+
+            const user = results[0];
+            const passwordMatch = await bcrypt.compare(verifyPassword, user.Password);
+
             if (passwordMatch) {
-                let id = user.userId;
-                let newData = { id, verifyEmail };
-                let jwtToken = createJWTtokenLogin(newData);
-
-                let tokenArray = [];
-                tokenArray = JSON.parse(fs.readFileSync("../data/tokens.json", 'utf8'));
-                let tokenData = {
-                    userId: id,
-                    token: jwtToken
-                };
-
-                tokenArray.push(tokenData);
-
-                fs.writeFileSync('../data/tokens.json', JSON.stringify(tokenArray, null, 2), 'utf8');
-
+                const jwtToken = createJWTtokenLogin(user);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
-                    statusCode: "200",
-                    message: "Login Successfull",
+                    statusCode: '200',
+                    message: 'Logged in successfully',
                     email: verifyEmail,
                     token: jwtToken
-                }))
+                }));
             } else {
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     statusCode: "401",
                     message: "Incorrect Password"
-                }))
+                }));
             }
-        } else {
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                statusCode: "401",
-                message: "User Not Found"
-            }))
-        }
+        });
     });
 }
 
 function createJWTtokenLogin(user) {
-    let payload = {
-        userEmail: user.verifyEmail,
-        userId: user.id
-    }
-    let token = jwt.sign(payload, secretKey, { expiresIn: "24h" });
+    const payload = {
+        userEmail: user.Email,
+        userId: user.user_ID
+    };
+    const token = jwt.sign(payload, secretKey, { expiresIn: "24h" });
     return token;
 }
 

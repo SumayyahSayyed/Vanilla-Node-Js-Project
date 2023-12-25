@@ -1,6 +1,68 @@
-const fs = require('fs');
-
 const { getAndVerifyToken } = require('./authentication');
+const db = require('./dbServer');
+
+function createProjectsTable(onTableCreated) {
+    const createProjectTable = `
+        CREATE TABLE IF NOT EXISTS projects (
+            project_ID INT,
+            user_ID VARCHAR(36),
+            FOREIGN KEY (user_ID) REFERENCES users(user_ID) ON DELETE CASCADE,
+            Name VARCHAR(255) NOT NULL,
+            Description VARCHAR(500) NOT NULL,
+            Tags VARCHAR(100) NOT NULL,
+            SourceCode VARCHAR(60) NOT NULL,
+            LiveLink VARCHAR(60) NOT NULL,
+            ProjectImg LONGTEXT NULL
+        )
+    `;
+    db.query(createProjectTable, (err) => {
+        if (err) {
+            console.error('Error creating Projects table:', err);
+            return;
+        }
+        onTableCreated();
+    });
+}
+
+function getUserIdFromDB(userIdData) {
+
+    const findID = `
+        SELECT user_ID, project_ID FROM projects    
+    `;
+    const userIDs = [];
+    db.query(findID, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            return;
+        }
+
+        for (let eachId of results) {
+            let ids = {
+                userID: eachId.user_ID,
+                projectID: eachId.project_ID
+            };
+            userIDs.push(ids)
+        }
+        userIdData(null, userIDs);
+    });
+}
+
+function insertProjectData(projectId, userId, projectNameData, projectDescription, tagsString, projectRepo, projectLiveLink, projectImg, insertion) {
+    const insertProjectQuery = `
+        INSERT INTO projects (project_ID, user_ID, Name, Description, Tags, SourceCode, LiveLink, ProjectImg)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(insertProjectQuery, [projectId, userId, projectNameData, projectDescription, tagsString, projectRepo, projectLiveLink, projectImg], (err, results) => {
+        if (err) {
+            console.error('Error inserting Project data:', err);
+            insertion(err);
+        } else {
+            console.log('Project data inserted successfully');
+            insertion(null);
+        }
+    });
+}
+
 
 function saveProjects(req, res) {
     let body = "";
@@ -9,202 +71,234 @@ function saveProjects(req, res) {
     });
     req.on('end', async () => {
         const { projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
-
+        let projectId;
+        const tagsString = tags.join(', ');
         getAndVerifyToken(req, res, (userId) => {
             if (userId) {
-                let projectId = 0;
-                let projectData = fs.readFileSync("../data/projects.json", "utf8");
-                let data = JSON.parse(projectData);
+                createProjectsTable(() => {
+                    getUserIdFromDB((err, userIDs) => {
+                        if (err) {
+                            console.error('Error getting user IDs:', err);
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '500',
+                                message: 'Internal Server Error'
+                            }));
+                            return;
+                        }
+                        let highestProjectID = -1;
 
-                if (!data) {
-                    data = [];
-                }
+                        for (const userProject of userIDs) {
+                            if (userProject.userID === userId && userProject.projectID > highestProjectID) {
+                                highestProjectID = userProject.projectID;
+                            }
+                        }
 
-                let findUserIndex = data.findIndex(user => user.userId === userId);
+                        projectId = highestProjectID + 1;
 
-                if (findUserIndex !== -1) {
-                    if (!data[findUserIndex].Projects) {
-                        data[findUserIndex].Projects = [];
-                        projectId = findUserIndex;
-                        projectId++;
-                        const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
+                        insertProjectData(projectId, userId, projectNameData, projectDescription, tagsString, projectRepo, projectLiveLink, projectImg, (err) => {
+                            if (err) {
+                                console.error('Error inserting Project data:', err);
+                                res.writeHead(500, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({
+                                    statusCode: '500',
+                                    message: 'Internal Server Error'
+                                }));
+                                return;
+                            }
 
-                        data[findUserIndex].Projects.push(projectInfo);
-                    }
-                    else if (data[findUserIndex].Projects) {
-                        projectId = data[findUserIndex].Projects.length;
-                        const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
-                        projectId++;
-                        data[findUserIndex].Projects.push(projectInfo);
-                    }
-                } else {
-                    projectId = 0;
-                    const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
-
-                    const newUser = {
-                        userId: userId,
-                        Projects: [projectInfo]
-                    };
-                    data.push(newUser);
-                    projectId++;
-                }
-
-                fs.writeFileSync("../data/projects.json", JSON.stringify(data, null, 2), "utf8");
-
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '200',
-                    message: 'Data received and saved successfully'
-                }));
-            } else {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '400',
-                    message: 'User not found'
-                }));
+                            console.log('Project data inserted successfully');
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '200',
+                                message: 'Project data inserted successfully'
+                            }));
+                        });
+                    });
+                });
             }
         });
-    })
+    });
 }
 
 function getProjects(req, res) {
     getAndVerifyToken(req, res, (userId) => {
         if (userId) {
-            let users = fs.readFileSync("../data/projects.json", "utf8");
-            let data = JSON.parse(users);
-            let projectArray = [];
-            let user = data.find(user => user.userId === userId);
+            getUserIdFromDB((err, userIDs) => {
+                if (err) {
+                    console.error('Error getting user IDs:', err);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        statusCode: '500',
+                        message: 'Internal Server Error'
+                    }));
+                    return;
+                }
+                const userExists = userIDs.some((user) => user.userID === userId);
+                if (userExists) {
+                    const getData = `
+                        SELECT * FROM projects
+                        WHERE user_ID = ?
+                    `;
 
-            if (user) {
-                let projectsArray = user.Projects;
-                projectsArray.forEach(project => {
+                    db.query(getData, [userId], (err, results) => {
+                        if (err) {
+                            console.error('Error fetching project data:', err);
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '500',
+                                message: 'Internal Server Error'
+                            }));
+                            return;
+                        }
 
-                    if (user.userId === userId) {
-                        let projectId = project.projectId;
-                        let projectNameData = project.projectNameData;
-                        let projectDescription = project.projectDescription;
-                        let tags = project.tags;
-                        let projectLiveLink = project.projectLiveLink;
-                        let projectRepo = project.projectRepo;
-                        let projectImg = project.projectImg;
-
-                        let projects = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
-                        projectArray.push(projects);
-                    }
-                });
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    statusCode: '200',
-                    message: 'Data received successfully',
-                    data: projectArray
-                }));
-            }
-
-        }
-        else {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                statusCode: '400',
-                message: 'User not found'
-            }));
-        }
-    })
-}
-
-function saveEditedProject(req, res) {
-    let body = "";
-    req.on('data', (chunk) => {
-        body += chunk.toString();
-    });
-    req.on('end', async () => {
-        const { indexValue, projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
-        // console.log("Index Value: ", indexValue);
-
-        getAndVerifyToken(req, res, (userId) => {
-            if (userId) {
-                let users = fs.readFileSync("../data/projects.json", "utf8");
-                let data = JSON.parse(users);
-                const projectInfo = { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg };
-
-                let user = data.find(user => user.userId === userId);
-                if (user) {
-                    let projectsArray = user.Projects;
-                    projectsArray.forEach((project, index) => {
-
-                        if (index === indexValue) {
-                            // let aimedProject = project[index];
-
-                            let projectNameData = projectInfo.projectNameData;
-                            let projectDescription = projectInfo.projectDescription;
-                            let tags = projectInfo.tags;
-                            let projectLiveLink = projectInfo.projectLiveLink;
-                            let projectRepo = projectInfo.projectRepo;
-                            let projectImg = projectInfo.projectImg;
-
-                            project.projectNameData = projectNameData;
-                            project.projectDescription = projectDescription;
-                            project.tags = tags;
-                            project.projectLiveLink = projectLiveLink;
-                            project.projectRepo = projectRepo;
-                            project.projectImg = projectImg;
-
-                            fs.writeFileSync("../data/projects.json", JSON.stringify(data, null, 2), "utf8");
+                        if (results.length > 0) {
+                            const projects = results.map((row) => ({
+                                projectId: row.project_ID,
+                                projectNameData: row.Name,
+                                projectDescription: row.Description,
+                                tags: row.Tags.split(', ').filter(tag => tag.trim() !== ''),
+                                projectRepo: row.SourceCode,
+                                projectLiveLink: row.LiveLink,
+                                projectImg: row.ProjectImg
+                            }));
 
                             res.writeHead(200, { 'Content-Type': 'application/json' });
                             res.end(JSON.stringify({
                                 statusCode: '200',
-                                message: 'Data received and saved successfully'
+                                message: 'Data received successfully',
+                                data: projects
+                            }));
+                        } else {
+                            res.writeHead(404, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({
+                                statusCode: '404',
+                                message: 'No project data found for the user'
                             }));
                         }
-                    })
-                }
-                else {
+                    });
+                } else {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         statusCode: '400',
                         message: 'User not found'
                     }));
                 }
-            }
-        });
-    })
-}
-
-function deleteProject(req, res) {
-    const id = parseInt(req.url.split('/').pop());
-    console.log("---------", id);
-
-    getAndVerifyToken(req, res, (userId) => {
-        if (userId) {
-            let users = fs.readFileSync("../data/projects.json", "utf8");
-            let data = JSON.parse(users);
-            let user = data.find(user => user.userId === userId);
-
-            if (user) {
-                let projectsArray = user.Projects;
-                let findProjectIndex = projectsArray.findIndex(project => project.projectId === id);
-                // console.log(findProjectIndex);
-                if (findProjectIndex !== -1) {
-                    projectsArray.splice(findProjectIndex, 1);
-                    fs.writeFile("../data/projects.json", JSON.stringify(data, null, 2), (err) => {
-                        if (err) {
-                            console.error(err);
-                            res.writeHead(500);
-                            res.end("Internal Server Error");
-                            return;
-                        }
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({
-                            statusCode: '200',
-                            message: 'DELETED'
-                        }));
-
-                    });
-                }
-            }
+            });
         }
     });
 }
+
+function saveEditedProject(req, res) {
+    const ID = parseInt(req.url.split('/').pop());
+    console.log("---------", ID);
+    let body = "";
+    req.on('data', (chunk) => {
+        body += chunk.toString();
+    });
+    req.on('end', async () => {
+        const { projectId, projectNameData, projectDescription, tags, projectLiveLink, projectRepo, projectImg } = JSON.parse(body);
+        const tagsString = tags.join(', ');
+
+        getAndVerifyToken(req, res, (userId) => {
+            if (userId) {
+                getUserIdFromDB((err, userIDs) => {
+                    if (err) {
+                        console.error('Error getting user IDs:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            statusCode: '500',
+                            message: 'Internal Server Error'
+                        }));
+                        return;
+                    }
+                    let findProjectID;
+                    for (let i = 0; i < userIDs.length; i++) {
+                        const id = userIDs[i];
+
+                        if (id.projectID === ID && id.userID === userId) {
+                            findProjectID = id.projectID;
+                            console.log("LINE 219: ", findProjectID);
+                            console.log("LINE 220: ", ID);
+                            let getSelectedProject = `
+                            UPDATE projects
+                            SET Name = ?, Description = ?, Tags = ?, SourceCode = ?, LiveLink = ?, ProjectImg = ?
+                            WHERE project_ID = ?
+                        `;
+                            db.query(getSelectedProject, [projectNameData, projectDescription, tagsString, projectRepo, projectLiveLink, projectImg, findProjectID], (err, results) => {
+                                if (err) {
+                                    console.error('Error updating project data:', err);
+                                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                                    res.end(JSON.stringify({
+                                        statusCode: '500',
+                                        message: 'Internal Server Error'
+                                    }));
+                                } else {
+                                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                                    res.end(JSON.stringify({
+                                        statusCode: '200',
+                                        message: 'Project Data updated successfully',
+                                    }));
+                                }
+                            });
+                            break;
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
+
+function deleteProject(req, res) {
+    const ID = parseInt(req.url.split('/').pop());
+    console.log("---------", ID);
+
+    getAndVerifyToken(req, res, (userId) => {
+        if (userId) {
+            getUserIdFromDB((err, userIDs) => {
+                if (err) {
+                    console.error('Error getting user IDs:', err);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        statusCode: '500',
+                        message: 'Internal Server Error'
+                    }));
+                    return;
+                }
+                let findProjectID;
+                for (let i = 0; i < userIDs.length; i++) {
+                    const id = userIDs[i];
+
+                    if (id.projectID === ID && id.userID === userId) {
+                        findProjectID = id.projectID;
+                        let deleteQuery = `
+                            DELETE FROM projects 
+                            WHERE project_ID = ? AND user_ID = ?;
+                        `;
+                        db.query(deleteQuery, [findProjectID, userId], (err, results) => {
+                            if (err) {
+                                console.error('Error updating project data:', err);
+                                res.writeHead(500, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({
+                                    statusCode: '500',
+                                    message: 'Internal Server Error'
+                                }));
+                            } else {
+                                res.writeHead(200, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({
+                                    statusCode: '200',
+                                    message: 'Project Data deleted successfully',
+                                }));
+                            }
+                        });
+                        break;
+                    }
+                }
+            });
+        }
+    });
+};
 
 module.exports = {
     saveProjects,

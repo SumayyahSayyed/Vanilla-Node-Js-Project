@@ -3,6 +3,8 @@ const fs = require('fs');
 const url = require('url');
 const cors = require('cors');
 
+
+const connection = require("./dbServer");
 const { getAndVerifyToken } = require("./authentication");
 const { SignUp } = require("./signupServer");
 const { LogIn } = require("./loginServer");
@@ -16,6 +18,12 @@ const { saveEdu, getEdu, saveEditedEdu, deleteEdu } = require("./eduServer");
 const { editableData, getEditableData } = require("./contentEditableServer");
 const { getDataForAdmin, deleteUser, updateUser } = require("./adminServer");
 const { deleteToken } = require("./deleteTokenServer");
+const { getProjectSearchData } = require("./searchProjectServer");
+// const { getExpSearchData } = require("./searchExpServer");
+// const { getEduSearchData } = require("./searchEduServer");
+const { getUserSearchData } = require("./adminSearchServer");
+const { getProjectAdminSearchData } = require("./searchProjectsAdminServer");
+const { makeAdmin } = require("./makeAdmin");
 
 
 const PORT = process.env.PORT || 3000;
@@ -23,6 +31,7 @@ const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
+    const query = parsedUrl.query.query;
     cors()(req, res, () => { });
 
     if (req.method === 'POST' && parsedUrl.pathname === '/signup') {
@@ -32,11 +41,8 @@ const server = http.createServer((req, res) => {
         LogIn(req, res);
     }
     else if (req.method === 'GET' && parsedUrl.pathname === '/profile') {
-        getAndVerifyToken(req, res, (userId) => {
-            if (userId) {
-                getProfileData(userId, res);
-            }
-        });
+
+        getProfileData(req, res);
     }
     else if (req.method === 'POST' && parsedUrl.pathname === '/socials') {
         socials(req, res);
@@ -56,7 +62,7 @@ const server = http.createServer((req, res) => {
     else if (req.method === 'GET' && parsedUrl.pathname == '/getProjects') {
         getProjects(req, res);
     }
-    else if (req.method === 'POST' && parsedUrl.pathname === '/saveEditedProject') {
+    else if (req.method === 'POST' && parsedUrl.pathname.startsWith('/saveEditedProject/')) {
         saveEditedProject(req, res);
     }
     else if (req.method === 'DELETE' && parsedUrl.pathname.startsWith('/deleteProject/')) {
@@ -68,7 +74,7 @@ const server = http.createServer((req, res) => {
     else if (req.method === 'GET' && parsedUrl.pathname === '/getExp') {
         getExp(req, res);
     }
-    else if (req.method === 'POST' && parsedUrl.pathname === '/saveEditedExp') {
+    else if (req.method === 'POST' && parsedUrl.pathname.startsWith('/saveEditedExp')) {
         saveEditedExp(req, res);
     }
     else if (req.method === 'DELETE' && parsedUrl.pathname.startsWith('/deleteExp/')) {
@@ -113,7 +119,21 @@ const server = http.createServer((req, res) => {
     else if (req.method === 'GET' && parsedUrl.pathname === '/checkUserTypeOnUser') {
         checkUserType(req, res);
     }
+    else if (req.method === 'GET' && parsedUrl.pathname === '/searchProject' && query) {
+        getProjectSearchData(req, res, query);
+    }
+    else if (req.method === 'GET' && parsedUrl.pathname === '/searchUser' && query) {
+        getUserSearchData(req, res, query);
+    }
+    else if (req.method === 'GET' && parsedUrl.pathname === '/searchProjectsInAdmin' && query) {
+        getProjectAdminSearchData(req, res, query);
+    }
+    else if (req.method === 'POST' && parsedUrl.pathname.startsWith('/makeAdmin/')) {
+        makeAdmin(req, res);
+    }
+
 });
+
 
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

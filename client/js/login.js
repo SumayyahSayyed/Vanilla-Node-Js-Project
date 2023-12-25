@@ -16,10 +16,10 @@ if (token) {
                 alert(data.message);
             }
             else if (data.statusCode === "200") {
-                if (data.data === "admin123@gmail.com") {
+                if (data.data === "admin123@gmail.com" || data.data === "admin456@gmail.com") {
                     window.location.href = "../html/admin.html";
                 }
-                else if (data.data !== "admin123@gmail.com") {
+                else if (data.data !== "admin123@gmail.com" && data.data !== "admin456@gmail.com") {
                     window.location.href = "/html/portfolio.html";
                 }
 
@@ -59,10 +59,15 @@ submit.addEventListener("submit", (e) => {
             else if (data.statusCode === "200") {
                 console.log(data.message);
                 localStorage.setItem("Token", data.token);
-                if (data.email === "admin123@gmail.com") {
+                // localStorage.setItem('tokenExpiration', expirationTime); 
+                if (data.email === "admin123@gmail.com" && data.statusCode === "200" ||
+                    data.email === "admin456@gmail.com" && data.statusCode === "200"
+                ) {
                     window.location.href = "../html/admin.html";
                 }
-                else if (data.email !== "admin123@gmail.com") {
+                else if (data.email !== "admin123@gmail.com" && data.statusCode === "200" ||
+                    data.email !== "admin456@gmail.com" && data.statusCode === "200"
+                ) {
                     window.location.href = "../html/portfolio.html";
                 }
             }
