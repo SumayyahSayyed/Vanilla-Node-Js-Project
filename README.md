@@ -20,18 +20,22 @@ An admin portal provides a comprehensive view of user information. Admins can ad
 ### Screenshot
 
 - User Portfolio
-![](My-Design/Register.png)
-![](My-Design/Login.png)
-![](My-Design/Website.png)
-![](My-Design/editable-content.mp4)
-![](My-Design/add%20or%20edit.png)
-![](My-Design/search%20in%20user%20page.png)
+![Register](My-Design/Register.png)
+![Login](My-Design/Login.png)
+![Website](My-Design/Website.png)
+![Editable-Content]<video width="320" height="240" controls>
+  <source src="My-Design/editable-content.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+![Add or Edit](My-Design/add%20or%20edit.png)
+![Search](My-Design/search%20in%20user%20page.png)
 
 - Admin Portal
-![](My-Design/admin%20users%20portal.png)
-![](My-Design/admin%20projects%20portal.png)
-![](My-Design/projects%20in%20admin.png)
-![](My-Design/Search%20in%20admin.png)
+![Users](My-Design/admin%20users%20portal.png)
+![Projects](My-Design/admin%20projects%20portal.png)
+![Projects View](My-Design/projects%20in%20admin.png)
+![Search](My-Design/Search%20in%20admin.png)
 
 ## Process
 
